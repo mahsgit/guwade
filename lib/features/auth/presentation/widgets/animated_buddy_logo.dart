@@ -40,7 +40,7 @@ class _AnimatedBuddyLogoState extends State<AnimatedBuddyLogo>
     return ScaleTransition(
       scale: _scaleAnimation,
       child: Image.asset(
-        'assets/images/buddy_logo.png',
+        'assets/main.png',
         height: 150,
         width: 150,
       ),
