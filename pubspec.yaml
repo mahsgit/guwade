@@ -1,0 +1,43 @@
+name: buddy
+description: A Flutter application for kids to learn through interactive stories and STEAM content.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  # State Management
+  flutter_bloc: ^9.1.1
+  # Dependency Injection
+  get_it: ^8.0.3
+  # Functional Programming
+  dartz: ^0.10.1
+  # Value Equality
+  equatable: ^2.0.5
+  # Network
+  http: ^1.1.0
+  internet_connection_checker: ^3.0.1
+  # Camera
+  camera: ^0.11.1
+  # Text to Speech
+  flutter_tts: ^3.8.5
+  # Image Processing
+  image: ^4.1.7
+  # Navigation
+  curved_navigation_bar: ^1.0.3
+  # Shared Preferences
+  shared_preferences: 
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
