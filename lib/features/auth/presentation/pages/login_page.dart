@@ -45,8 +45,8 @@ class _LoginPageState extends State<LoginPage> {
               SnackBar(content: Text(state.message)),
             );
           } else if (state is AuthAuthenticated) {
-            // Navigate to home page
-            Navigator.pushReplacementNamed(context, '/home');
+            // Navigate to dashboard page
+            Navigator.pushReplacementNamed(context, '/dashboard');
           }
         },
         child: SafeArea(
