@@ -1,11 +1,4 @@
-import 'package:buddy/features/home/presentation/widgets/activity.dart';
-import 'package:buddy/features/home/presentation/widgets/bottom_nav.dart';
-import 'package:buddy/features/home/presentation/widgets/card.dart';
-import 'package:buddy/features/profile/presentation/pages/profile.dart';
-import 'package:buddy/features/profile/presentation/pages/word.dart';
-import 'package:buddy/features/quiz/presentation/pages/quiz_page.dart';
-import 'package:buddy/features/storytelling/presentation/pages/story.dart';
-import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+
 import 'package:flutter/material.dart';
 
 class DashboardPage extends StatelessWidget {
@@ -14,174 +7,181 @@ class DashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        leading: const BackButton(),
+        backgroundColor: Colors.white,
+        elevation: 0,
+      ),
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Back button and user stats
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                    ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Row(
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Top illustration
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.asset(
+                  'assets/main.png',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: 180,
+                ),
+              ),
+            ),
+            // User info row
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Gems and rank
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Row(
                         children: [
-                          Icon(Icons.star, color: Colors.amber, size: 20),
+                          Icon(Icons.diamond, color: Colors.blue, size: 20),
                           SizedBox(width: 4),
-                          Text('26'),
+                          Text('26',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
                         ],
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text('Rank: 4'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // User greeting
-                const Row(
-                  children: [
-                    Icon(Icons.waving_hand, color: Colors.amber),
-                    SizedBox(width: 8),
-                    Text(
-                      'Hi, Abel',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      ' · 5 Years old',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-
-                // Ready to learn section
-                const Text(
-                  'Ready to learn?',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+                      SizedBox(height: 2),
+                      Text('Rank: 4',
+                          style:
+                              TextStyle(fontSize: 12, color: Colors.black54)),
+                    ],
                   ),
-                ),
-                const Text(
-                  'Continue where you left off',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
+                  // User greeting
+                  Row(
+                    children: [
+                      const Text('👋Hi, Abel\n5 Years old',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w500, fontSize: 14)),
+                      const SizedBox(width: 8),
+                      // Avatar
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: Colors.orange[100],
+                        child: const Icon(Icons.person, color: Colors.brown),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 24),
-
-                // Learning cards
-                Row(
-                  children: [
-                    Expanded(
-                      child: _LearningCard(
-                        title: 'Story',
-                        imagePath: 'assets/story_illustration.png',
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const StorySelectionPage(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _LearningCard(
-                        title: 'Quiz',
-                        imagePath: 'assets/quiz_illustration.png',
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const QuizPage(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+            const SizedBox(height: 16),
+            // Ready to learn
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Ready to learn?',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                ),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 4),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Continue where you left off',
+                  style: TextStyle(fontSize: 14, color: Colors.black54),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Story and Quiz cards
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _DashboardCard(
+                    image: 'assets/cinderella.png',
+                    label: 'Story',
+                    onTap: () {
+                    
+Navigator.pushNamed(context, '/story');
+                    
+                      // TODO: Navigate to Story
+                    },
+                  ),
+                  _DashboardCard(
+                    image: 'assets/quiz.png',
+                    label: 'Quiz',
+                    onTap: () {
+                      Navigator.pushNamed(context, '/quiz');
+
+                      // TODO: Navigate to Quiz
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+          ],
         ),
       ),
     );
   }
 }
 
-class _LearningCard extends StatelessWidget {
-  final String title;
-  final String imagePath;
+class _DashboardCard extends StatelessWidget {
+  final String image;
+  final String label;
   final VoidCallback onTap;
 
-  const _LearningCard({
-    required this.title,
-    required this.imagePath,
+  const _DashboardCard({
+    required this.image,
+    required this.label,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 160,
-        decoration: BoxDecoration(
-          color: title == 'Story' ? Colors.pink.shade50 : Colors.blue.shade50,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              imagePath,
-              height: 100,
-              fit: BoxFit.cover,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 6),
+          decoration: BoxDecoration(
+            color: Colors.orange[50],
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.orange.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
               ),
-            ),
-          ],
+            ],
+          ),
+          child: Column(
+            children: [
+              ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(16)),
+                child: Image.asset(
+                  image,
+                  height: 90,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
         ),
       ),
     );

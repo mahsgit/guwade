@@ -1,19 +1,27 @@
+import 'package:buddy/features/home/presentation/pages/dashboard.dart';
+import 'package:buddy/features/quiz/presentation/bloc/quiz/quiz_bloc.dart';
+import 'package:buddy/features/quiz/presentation/pages/quiz_page.dart';
+import 'package:buddy/features/storytelling/presentation/bloc/storytelling_bloc.dart';
+import 'package:buddy/features/storytelling/presentation/pages/story.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/injection/injection_container.dart' as di;
-import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/pages/login_page.dart';
-import 'features/storytelling/presentation/bloc/storytelling_bloc.dart';
-import 'features/storytelling/presentation/pages/stories_page.dart';
-import 'features/storytelling/presentation/pages/vocabulary_page.dart';
-import 'features/home/presentation/pages/dashboard.dart';
+import 'features/auth/presentation/bloc/auth_bloc.dart';
 
+/// Main entry point of the application
 void main() async {
+  // Ensure Flutter bindings are initialized
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize dependency injection
   await di.init();
+
+  // Run the app
   runApp(const MyApp());
 }
 
+/// Root widget of the application
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -27,41 +35,22 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create: (_) => di.sl<StorytellingBloc>(),
         ),
+        BlocProvider(
+          create: (_) => di.sl<QuizBloc>(),
+        ),
       ],
       child: MaterialApp(
-        title: 'Buddy',
+        title: 'Buddy App',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.blue,
-            brightness: Brightness.light,
-          ),
-          useMaterial3: true,
-          inputDecorationTheme: InputDecorationTheme(
-            filled: true,
-            fillColor: Colors.grey[200],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-          ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 32,
-                vertical: 16,
-              ),
-            ),
-          ),
+          primarySwatch: Colors.blue,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
-        home: const LoginPage(),
+        initialRoute: '/',
         routes: {
+          '/': (context) => const LoginPage(),
           '/dashboard': (context) => const DashboardPage(),
-          '/home': (context) => const StoriesPage(),
-          '/vocabulary': (context) => const VocabularyPage(),
+          '/story': (context) => const StorySelectionPage(),
+          '/quiz': (context) => const QuizPage(),
         },
       ),
     );

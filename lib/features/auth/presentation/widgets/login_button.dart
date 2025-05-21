@@ -3,11 +3,15 @@ import 'package:flutter/material.dart';
 class LoginButton extends StatelessWidget {
   final VoidCallback onPressed;
   final bool isLoading;
+  final Color backgroundColor;
+  final Color textColor;
 
   const LoginButton({
     super.key,
     required this.onPressed,
     this.isLoading = false,
+    this.backgroundColor = Colors.blue,
+    this.textColor = Colors.white,
   });
 
   @override
@@ -18,8 +22,8 @@ class LoginButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Theme.of(context).primaryColor,
-          foregroundColor: Colors.white,
+          backgroundColor: backgroundColor,
+          foregroundColor: textColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -30,8 +34,8 @@ class LoginButton extends StatelessWidget {
                 height: 24,
                 width: 24,
                 child: CircularProgressIndicator(
-                  color: Colors.white,
                   strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               )
             : const Text(

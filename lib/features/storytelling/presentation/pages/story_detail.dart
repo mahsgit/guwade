@@ -1,11 +1,10 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:camera/camera.dart';
-import '../../../../core/di/injection_container.dart';
 import '../../presentation/bloc/story_bloc.dart';
-import '../../domain/entities/story_detail.dart';
+import 'package:buddy/features/storytelling/domain/entities/vocabulary.dart';
 
 class StoryDetailPage extends StatefulWidget {
   final String storyId;
@@ -29,249 +28,51 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
   bool isPlaying = false;
   bool isBookmarked = false;
   double progress = 0.0;
-
-  // Text size options
-  double _fontSize = 18.0; // Larger default size for children
-  // TTS related variables
+  double _fontSize = 18.0;
   late FlutterTts _flutterTts;
-  double _volume = 0.7; // Default volume (0.0 to 1.0)
-  double _speechRate = 0.4; // Slower default speech rate for children
+  double _volume = 0.7;
+  double _speechRate = 0.4;
   bool _isTtsInitialized = false;
-  // Page navigation
   int _currentPage = 0;
-  late List<String> _pages;
+  List<String> _pages = [];
   final PageController _pageController = PageController();
-
-  // Text highlighting
   String _currentWord = "";
   List<String> _currentPageWords = [];
   int _currentWordIndex = -1;
-
-  // Emotion detection
-  late CameraController _cameraController;
-  final List<XFile> _capturedImages = [];
-  final int _maxImages = 15;
-  Timer? _captureTimer;
-  bool _processingEmotion = false;
-  bool _cameraInitialized = false;
-  bool _showCamera = false;
-
-  // Current story data
-  String _currentStoryId = '';
-  String _currentTitle = '';
-  String _currentImageUrl = '';
-  String _currentContent = '';
+  List<dynamic> _storyAndQuizPages = [];
+  List<Vocabulary> _vocabulary = [];
+  int? _selectedQuizOption;
+  bool? _quizAnsweredCorrectly;
+  bool _quizTtsPlaying = false;
+  int _currentQuizWordIndex = 0;
+  String _currentQuizWord = '';
 
   @override
   void initState() {
     super.initState();
-    _currentStoryId = widget.storyId;
-    _currentTitle = widget.title;
-    _currentImageUrl = widget.imageUrl;
-    _currentContent = widget.content;
     _initTts();
-    _splitContentIntoPages();
-    _initializeCamera();
+    // Fetch story details from backend
+    context.read<StoryBloc>().add(GetStoryDetailsEvent(widget.storyId));
   }
 
   @override
   void dispose() {
     _flutterTts.stop();
     _pageController.dispose();
-    _captureTimer?.cancel();
-    if (_cameraInitialized) {
-      _cameraController.dispose();
-    }
     super.dispose();
   }
 
-  // Initialize camera
-  Future<void> _initializeCamera() async {
-    try {
-      final cameras = sl<List<CameraDescription>>();
-      if (cameras.isEmpty) {
-        debugPrint('No cameras available');
-        return;
-      }
-
-      // Use front camera for face detection
-      final frontCamera = cameras.firstWhere(
-        (camera) => camera.lensDirection == CameraLensDirection.front,
-        orElse: () => cameras.first,
-      );
-
-      _cameraController = CameraController(
-        frontCamera,
-        ResolutionPreset.medium,
-        enableAudio: false,
-      );
-
-      await _cameraController.initialize();
-      if (mounted) {
-        setState(() {
-          _cameraInitialized = true;
-        });
-        _startCapturingImages();
-      }
-    } catch (e) {
-      debugPrint('Error initializing camera: $e');
-    }
-  }
-
-  // Start capturing images for emotion detection
-  void _startCapturingImages() {
-    if (!_cameraInitialized) return;
-
-    _captureTimer = Timer.periodic(const Duration(seconds: 2), (timer) async {
-      if (_capturedImages.length >= _maxImages) {
-        _captureTimer?.cancel();
-        if (!_processingEmotion) {
-          _processEmotions();
-        }
-        return;
-      }
-
-      try {
-        if (!_cameraController.value.isInitialized) {
-          return;
-        }
-
-        final XFile image = await _cameraController.takePicture();
-
-        setState(() {
-          _capturedImages.add(image);
-        });
-
-        // If we have enough images, process emotions
-        if (_capturedImages.length >= _maxImages) {
-          _captureTimer?.cancel();
-          if (!_processingEmotion) {
-            _processEmotions();
-          }
-        }
-      } catch (e) {
-        debugPrint('Error capturing image: $e');
-      }
-    });
-  }
-
-  // Process captured images for emotion detection
-  void _processEmotions() {
-    setState(() {
-      _processingEmotion = true;
-    });
-
-    try {
-      // Send images to emotion detection bloc
-      context.read<StoryBloc>().add(
-            DetectEmotionEvent(_capturedImages),
-          );
-    } catch (e) {
-      debugPrint('Error processing emotions: $e');
-    }
-
-    // Reset for next batch
-    _capturedImages.clear();
-
-    // Restart image capture after processing
-    Future.delayed(const Duration(seconds: 1), () {
-      setState(() {
-        _processingEmotion = false;
-      });
-      _startCapturingImages();
-    });
-  }
-
-  // Show dialog to change story if user is not interested
-  void _showChangeStoryDialog(BuildContext context, String storyId) {
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Change Story?'),
-          content: const Text(
-              'It seems you might not be interested in this story. Would you like to read a different one?'),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('No, continue'),
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Yes, change story'),
-              onPressed: () {
-                // Close the dialog first
-                Navigator.of(dialogContext).pop();
-
-                // Then dispatch the event to change the story
-                print(
-                    "Dispatching GetNextStoryEvent with ID: $_currentStoryId");
-                context
-                    .read<StoryBloc>()
-                    .add(GetNextStoryEvent(_currentStoryId));
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // Update story content with new story
-  void _updateStoryContent(StoryDetail storyDetail) {
-    setState(() {
-      // Access the ID through the story property
-      _currentStoryId = storyDetail.story.id;
-      _currentTitle = storyDetail.story.title;
-
-      // Assuming these are properties of the Story object or can be derived from pages
-      _currentImageUrl =
-          storyDetail.story.imageUrl ?? 'assets/images/default_story.jpg';
-
-      // For content, we might need to concatenate page contents or use adapted content
-      if (storyDetail.pages.isNotEmpty) {
-        _currentContent =
-            storyDetail.pages.map((page) => page.content).join('\n\n');
-      } else if (storyDetail.adaptedContent.containsKey('neutral')) {
-        _currentContent = storyDetail.adaptedContent['neutral'] ?? '';
-      } else {
-        _currentContent = 'No content available for this story.';
-      }
-
-      // Reset reading state
-      isPlaying = false;
-      progress = 0.0;
-      _currentPage = 0;
-      _currentWordIndex = -1;
-
-      // Re-split content for the new story
-      _splitContentIntoPages();
-
-      // Reset page controller
-      _pageController.jumpToPage(0);
-    });
-
-    // Stop any ongoing TTS
-    _flutterTts.stop();
-  }
-
-  // Initialize Text-to-Speech
   Future<void> _initTts() async {
     _flutterTts = FlutterTts();
-
     await _flutterTts.setLanguage("en-US");
     await _flutterTts.setVolume(_volume);
     await _flutterTts.setSpeechRate(_speechRate);
     await _flutterTts.setPitch(1.0);
-
     _flutterTts.setCompletionHandler(() {
       setState(() {
         isPlaying = false;
-        progress = 1.0; // Set to complete
+        progress = 1.0;
         _currentWordIndex = -1;
-
-        // Auto-advance to next page after a short delay
         if (_currentPage < _pages.length - 1) {
           Future.delayed(const Duration(seconds: 1), () {
             if (mounted) {
@@ -284,19 +85,13 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
         }
       });
     });
-
     _flutterTts.setProgressHandler(
         (String text, int startOffset, int endOffset, String word) {
       if (mounted) {
         setState(() {
           _currentWord = word;
-
-          // Find the word index in the current page
           if (_currentPageWords.isNotEmpty) {
-            // Try to find the exact word
             _currentWordIndex = _currentPageWords.indexOf(word);
-
-            // If not found, try to find a word that contains this word
             if (_currentWordIndex == -1) {
               for (int i = 0; i < _currentPageWords.length; i++) {
                 if (_currentPageWords[i].contains(word)) {
@@ -305,8 +100,6 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                 }
               }
             }
-
-            // If still not found, use approximate position
             if (_currentWordIndex == -1 && _currentPageWords.isNotEmpty) {
               _currentWordIndex =
                   ((startOffset / text.length) * _currentPageWords.length)
@@ -315,61 +108,45 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                   _currentWordIndex.clamp(0, _currentPageWords.length - 1);
             }
           }
-
           if (_pages[_currentPage].isNotEmpty) {
             progress = endOffset / text.length;
           }
         });
       }
     });
-
     setState(() {
       _isTtsInitialized = true;
     });
   }
 
-  // Split content into smaller pages for children (2 sentences per page)
-  void _splitContentIntoPages() {
-    // First split by sentences
-    final RegExp sentenceRegex = RegExp(r'[^.!?]+[.!?]');
-    final Iterable<RegExpMatch> sentenceMatches =
-        sentenceRegex.allMatches(_currentContent);
-    final List<String> sentences =
-        sentenceMatches.map((match) => match.group(0)!.trim()).toList();
-
-    _pages = [];
-
-    // Group into pages of 2 sentences or less
-    for (int i = 0; i < sentences.length; i += 2) {
-      final int end = (i + 2 < sentences.length) ? i + 2 : sentences.length;
-      final String page = sentences.sublist(i, end).join(' ');
-      _pages.add(page);
+  void _splitContentIntoPages(String content) {
+    final lines = content.split(RegExp(r'(?<=\.)\s+'));
+    List<String> pages = [];
+    for (int i = 0; i < lines.length; i += 3) {
+      pages.add(lines
+          .sublist(i, (i + 3 < lines.length) ? i + 3 : lines.length)
+          .join(' '));
     }
-
-    // Ensure we have at least one page
-    if (_pages.isEmpty) {
-      _pages = ['No content available'];
-    }
-
-    // Pre-split the first page into words
-    if (_pages.isNotEmpty) {
-      _updateCurrentPageWords();
+    _pages = pages;
+    _storyAndQuizPages = [];
+    for (int i = 0; i < _pages.length; i++) {
+      _storyAndQuizPages.add({'type': 'story', 'content': _pages[i]});
+      if ((i + 1) % 3 == 0 && i != 0) {
+        final quizWords =
+            _extractVocabularyFromPages(_pages.sublist(i - 2, i + 1));
+        if (quizWords.isNotEmpty) {
+          _storyAndQuizPages.add({'type': 'quiz', 'words': quizWords});
+        }
+      }
     }
   }
 
-  // Update the words list for the current page
-  void _updateCurrentPageWords() {
-    // Split by words, keeping punctuation attached to words
-    final RegExp wordRegex = RegExp(r'\b\w+\b[.,;:!?]?');
-    final Iterable<RegExpMatch> wordMatches =
-        wordRegex.allMatches(_pages[_currentPage]);
-    _currentPageWords = wordMatches.map((match) => match.group(0)!).toList();
+  List<Vocabulary> _extractVocabularyFromPages(List<String> pages) {
+    return _vocabulary.take(2).toList();
   }
 
-  // Play or pause the TTS
   Future<void> _playPause() async {
     if (!_isTtsInitialized) return;
-
     if (isPlaying) {
       await _flutterTts.stop();
       setState(() {
@@ -386,7 +163,6 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
     }
   }
 
-  // Go to next page
   void _nextPage() {
     if (_currentPage < _pages.length - 1) {
       _flutterTts.stop();
@@ -397,7 +173,6 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
     }
   }
 
-  // Go to previous page
   void _previousPage() {
     if (_currentPage > 0) {
       _flutterTts.stop();
@@ -408,14 +183,12 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
     }
   }
 
-  // Change text size
   void _changeTextSize(double size) {
     setState(() {
       _fontSize = size;
     });
   }
 
-  // Show voice settings dialog
   void _showVoiceSettings() {
     showModalBottomSheet(
       context: context,
@@ -440,8 +213,6 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
-
-                // Voice Speed
                 Row(
                   children: [
                     const Icon(Icons.speed, color: Colors.white70),
@@ -454,7 +225,7 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                       child: Slider(
                         value: _speechRate,
                         min: 0.1,
-                        max: 0.7, // Lower max speed for children
+                        max: 0.7,
                         divisions: 6,
                         activeColor: Colors.tealAccent,
                         inactiveColor: Colors.grey[700],
@@ -480,8 +251,6 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                     ),
                   ],
                 ),
-
-                // Volume
                 Row(
                   children: [
                     const Icon(Icons.volume_up, color: Colors.white70),
@@ -516,8 +285,6 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                     ),
                   ],
                 ),
-
-                // Text Size
                 Row(
                   children: [
                     const Icon(Icons.text_fields, color: Colors.white70),
@@ -534,32 +301,6 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                     _textSizeButton('L', 22.0),
                   ],
                 ),
-
-                // Camera toggle
-                Row(
-                  children: [
-                    const Icon(Icons.camera_front, color: Colors.white70),
-                    const SizedBox(width: 10),
-                    const Text(
-                      'Show Camera',
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                    const SizedBox(width: 20),
-                    Switch(
-                      value: _showCamera,
-                      activeColor: Colors.tealAccent,
-                      onChanged: (value) {
-                        setModalState(() {
-                          _showCamera = value;
-                        });
-                        setState(() {
-                          _showCamera = value;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-
                 const SizedBox(height: 20),
               ],
             ),
@@ -569,10 +310,8 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
     );
   }
 
-  // Helper method to create text size buttons
   Widget _textSizeButton(String label, double size) {
     final isSelected = _fontSize == size;
-
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: isSelected ? Colors.tealAccent : Colors.grey[800],
@@ -591,14 +330,12 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
     );
   }
 
-  // Get speech rate label
   String _getSpeechRateLabel() {
     if (_speechRate <= 0.3) return 'Slow';
     if (_speechRate <= 0.5) return 'Normal';
     return 'Fast';
   }
 
-  // Download the story
   void _downloadStory() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -608,7 +345,6 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
     );
   }
 
-  // Build word-by-word highlighted text
   Widget _buildWordHighlightedText(String text) {
     if (!isPlaying || _currentWordIndex < 0 || _currentPageWords.isEmpty) {
       return Text(
@@ -620,7 +356,6 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
         ),
       );
     }
-
     return RichText(
       text: TextSpan(
         children: _buildHighlightedWordSpans(),
@@ -628,13 +363,10 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
     );
   }
 
-  // Build text spans with the current word highlighted
   List<TextSpan> _buildHighlightedWordSpans() {
     List<TextSpan> spans = [];
-
     for (int i = 0; i < _currentPageWords.length; i++) {
       if (i == _currentWordIndex) {
-        // Highlighted current word
         spans.add(
           TextSpan(
             text: "${_currentPageWords[i]} ",
@@ -648,7 +380,6 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
           ),
         );
       } else {
-        // Regular word
         spans.add(
           TextSpan(
             text: "${_currentPageWords[i]} ",
@@ -661,409 +392,363 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
         );
       }
     }
-
     return spans;
+  }
+
+  void _updateCurrentPageWords(String content) {
+    final RegExp wordRegex = RegExp(r'\b\w+\b[.,;:!?]?');
+    final Iterable<RegExpMatch> wordMatches = wordRegex.allMatches(content);
+    _currentPageWords = wordMatches.map((match) => match.group(0)!).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<StoryBloc, StoryState>(
-      listener: (context, state) {
-        if (state is EmotionDetected && !state.isInterested) {
-          _showChangeStoryDialog(context, _currentStoryId);
-        } else if (state is NextStoryLoaded) {
-          // Update the story content when a new story is loaded
-          _updateStoryContent(state.storyDetail);
-        }
-      },
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        extendBodyBehindAppBar: true,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Navigator.pop(context),
-          ),
-          title: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.indigo[900],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(
-              Icons.auto_stories,
-              color: Colors.white,
-              size: 20,
-            ),
-          ),
-          centerTitle: true,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.download, color: Colors.white),
-              onPressed: _downloadStory,
-            ),
-            IconButton(
-              icon: Icon(
-                isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                color: Colors.white,
+    return BlocBuilder<StoryBloc, StoryState>(
+      builder: (context, state) {
+        if (state is StoryDetailsLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (state is StoryDetailsLoaded) {
+          final storyDetail = state.storyDetail;
+          final content = storyDetail.pages.map((p) => p.content).join(' ');
+          _splitContentIntoPages(content);
+          return Scaffold(
+            backgroundColor: Colors.black,
+            extendBodyBehindAppBar: true,
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
               ),
-              onPressed: () {
-                setState(() {
-                  isBookmarked = !isBookmarked;
-                });
-              },
-            ),
-          ],
-        ),
-        body: Column(
-          children: [
-            // Story image with gradient overlay
-            Expanded(
-              child: Stack(
-                children: [
-                  // Full-screen image
-                  Image.asset(
-                    _currentImageUrl,
-                    width: double.infinity,
-                    height: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-
-                  // Gradient overlay from bottom to top
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withOpacity(0.5),
-                          Colors.black.withOpacity(0.8),
-                          Colors.black,
-                        ],
-                        stops: const [0.5, 0.7, 0.8, 1.0],
-                      ),
-                    ),
-                  ),
-
-                  // Camera preview (if enabled)
-                  if (_showCamera && _cameraInitialized)
-                    Positioned(
-                      top: 80,
-                      right: 20,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: SizedBox(
-                          width: 100,
-                          height: 150,
-                          child: CameraPreview(_cameraController),
-                        ),
-                      ),
-                    ),
-
-                  // Emotion detection status
-                  if (_processingEmotion)
-                    Positioned(
-                      top: 240,
-                      right: 20,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.black54,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(
-                              width: 12,
-                              height: 12,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.tealAccent),
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              'Analyzing...',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                  // Content positioned at the bottom
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Title
-                          Text(
-                            _currentTitle,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-
-                          // Page indicator for kids
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: List.generate(
-                              _pages.length,
-                              (index) => Container(
-                                width: 8,
-                                height: 8,
-                                margin:
-                                    const EdgeInsets.symmetric(horizontal: 4),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: index == _currentPage
-                                      ? Colors.tealAccent
-                                      : Colors.grey[700],
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-
-                          // Story content with word highlighting
-                          SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.2,
-                            child: PageView.builder(
-                              controller: _pageController,
-                              itemCount: _pages.length,
-                              onPageChanged: (index) {
-                                setState(() {
-                                  _currentPage = index;
-                                  isPlaying = false;
-                                  progress = 0.0;
-                                  _currentWordIndex = -1;
-                                  _updateCurrentPageWords();
-                                });
-                                _flutterTts.stop();
-                              },
-                              itemBuilder: (context, index) {
-                                return Center(
-                                  child: Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black.withOpacity(0.3),
-                                      borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(
-                                        color: Colors.grey[800]!,
-                                        width: 1,
-                                      ),
-                                    ),
-                                    child: index == _currentPage
-                                        ? _buildWordHighlightedText(
-                                            _pages[index])
-                                        : Text(
-                                            _pages[index],
-                                            style: TextStyle(
-                                              color: Colors.white70,
-                                              fontSize: _fontSize,
-                                              height: 1.5,
-                                            ),
-                                          ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Audio player controls
-            Column(
-              children: [
-                // Progress bar
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Background track
-                      Container(
-                        height: 4.0,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[800],
-                          borderRadius: BorderRadius.circular(2.0),
-                        ),
-                      ),
-
-                      // Progress track
-                      Positioned(
-                        left: 0,
-                        child: Container(
-                          height: 4.0,
-                          width: (MediaQuery.of(context).size.width - 40) *
-                              progress,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Colors.yellow, Colors.orange],
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                            ),
-                            borderRadius: BorderRadius.circular(2.0),
-                          ),
-                        ),
-                      ),
-
-                      // Progress indicator
-                      Positioned(
-                        left: (MediaQuery.of(context).size.width - 40) *
-                                progress -
-                            8,
-                        child: GestureDetector(
-                          onHorizontalDragUpdate: (details) {
-                            final RenderBox box =
-                                context.findRenderObject() as RenderBox;
-                            final Offset localPosition =
-                                box.globalToLocal(details.globalPosition);
-                            final double newProgress = (localPosition.dx - 20) /
-                                (MediaQuery.of(context).size.width - 40);
-
-                            if (newProgress >= 0 && newProgress <= 1.0) {
-                              setState(() {
-                                progress = newProgress;
-                                // Calculate approximate word position
-                                if (_currentPageWords.isNotEmpty) {
-                                  _currentWordIndex =
-                                      (newProgress * _currentPageWords.length)
-                                          .floor();
-                                  _currentWordIndex = _currentWordIndex.clamp(
-                                      0, _currentPageWords.length - 1);
-                                }
-                              });
-
-                              // If playing, stop and restart from new position
-                              if (isPlaying) {
-                                _flutterTts.stop();
-                                final int wordIndex =
-                                    (newProgress * _currentPageWords.length)
-                                        .floor();
-                                if (wordIndex < _currentPageWords.length) {
-                                  // Create a substring from the selected word to the end
-                                  final String remainingText = _currentPageWords
-                                      .sublist(wordIndex)
-                                      .join(' ');
-                                  _flutterTts.speak(remainingText);
-                                }
-                              }
-                            }
-                          },
-                          child: Container(
-                            height: 16.0,
-                            width: 16.0,
-                            decoration: const BoxDecoration(
-                              color: Colors.orange,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+              title: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.indigo[900],
+                  borderRadius: BorderRadius.circular(8),
                 ),
-
-                // Control buttons
-                Container(
-                  height: 60.0,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.teal[100]!,
-                        Colors.teal[200]!,
-                      ],
-                    ),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
-                    ),
+                child: const Icon(
+                  Icons.auto_stories,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              centerTitle: true,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.download, color: Colors.white),
+                  onPressed: _downloadStory,
+                ),
+                IconButton(
+                  icon: Icon(
+                    isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                    color: Colors.white,
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      // Text mode button
-                      IconButton(
-                        icon: const Icon(Icons.text_fields),
-                        onPressed: _showVoiceSettings,
-                        tooltip: 'Text Settings',
-                        color: Colors.black87,
-                      ),
-
-                      // Previous button
-                      IconButton(
-                        icon: const Icon(Icons.skip_previous),
-                        onPressed: _currentPage > 0 ? _previousPage : null,
-                        tooltip: 'Previous Page',
-                        color: _currentPage > 0
-                            ? Colors.black87
-                            : Colors.grey[400],
-                      ),
-
-                      // Play/Pause button
-                      IconButton(
-                        icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
-                        onPressed: _isTtsInitialized ? _playPause : null,
-                        tooltip: isPlaying ? 'Pause' : 'Play',
-                        color: _isTtsInitialized
-                            ? Colors.black87
-                            : Colors.grey[400],
-                      ),
-
-                      // Next button
-                      IconButton(
-                        icon: const Icon(Icons.skip_next),
-                        onPressed:
-                            _currentPage < _pages.length - 1 ? _nextPage : null,
-                        tooltip: 'Next Page',
-                        color: _currentPage < _pages.length - 1
-                            ? Colors.black87
-                            : Colors.grey[400],
-                      ),
-
-                      // Camera button
-                      IconButton(
-                        icon: const Icon(Icons.camera_front),
-                        onPressed: () {
-                          setState(() {
-                            _showCamera = !_showCamera;
-                          });
-                        },
-                        tooltip: 'Toggle Camera',
-                        color: Colors.black87,
-                      ),
-                    ],
-                  ),
+                  onPressed: () {
+                    setState(() {
+                      isBookmarked = !isBookmarked;
+                    });
+                  },
                 ),
               ],
             ),
+            body: PageView.builder(
+              controller: _pageController,
+              itemCount: _storyAndQuizPages.length,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentPage = index;
+                  isPlaying = false;
+                  progress = 0.0;
+                  _currentWordIndex = -1;
+                  if (_storyAndQuizPages[index]['type'] == 'story') {
+                    _updateCurrentPageWords(
+                        _storyAndQuizPages[index]['content']);
+                  }
+                });
+                _flutterTts.stop();
+              },
+              itemBuilder: (context, index) {
+                final page = _storyAndQuizPages[index];
+                if (page['type'] == 'story') {
+                  return _buildStoryPage(
+                      page['content'],
+                      storyDetail.story.title,
+                      storyDetail.story.imageUrl ?? '');
+                } else if (page['type'] == 'quiz') {
+                  return _buildQuizPage(page['words']);
+                }
+                return const SizedBox();
+              },
+            ),
+            bottomNavigationBar: _buildControls(),
+          );
+        } else if (state is StoryError) {
+          return Center(
+              child: Text(state.message,
+                  style: const TextStyle(color: Colors.white)));
+        }
+        return const SizedBox();
+      },
+    );
+  }
+
+  Widget _buildStoryPage(String content, String title, String imageUrl) {
+    return Container(
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: imageUrl.isNotEmpty
+              ? NetworkImage(imageUrl)
+              : const AssetImage('assets/images/default_story.jpg')
+                  as ImageProvider,
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.transparent,
+              Colors.black.withOpacity(0.5),
+              Colors.black.withOpacity(0.8),
+              Colors.black,
+            ],
+            stops: const [0.5, 0.7, 0.8, 1.0],
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildWordHighlightedText(content),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuizPage(List<Vocabulary> words) {
+    if (words.isEmpty) {
+      return const Center(
+          child:
+              Text('No quiz available', style: TextStyle(color: Colors.white)));
+    }
+    final random = Random();
+    final vocab = words[random.nextInt(words.length)];
+    final questionText = 'What does "${vocab.word}" mean?';
+    final options = [
+      vocab.synonym,
+      ...words.where((w) => w.word != vocab.word).map((w) => w.synonym)
+    ]..shuffle();
+    final correctIndex = options.indexOf(vocab.synonym);
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _buildQuizQuestionTTS(questionText),
+          const SizedBox(height: 24),
+          ...List.generate(options.length, (i) {
+            final isSelected = _selectedQuizOption == i;
+            final isCorrect = i == correctIndex;
+            return GestureDetector(
+              onTap: _quizAnsweredCorrectly == null
+                  ? () => _onQuizOptionSelected(i, isCorrect)
+                  : null,
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? (isCorrect ? Colors.green : Colors.red)
+                      : Colors.blue,
+                  borderRadius: BorderRadius.circular(12),
+                  border: isSelected
+                      ? Border.all(color: Colors.yellow, width: 3)
+                      : null,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                        child: _buildQuizOptionTTS(options[i], isSelected)),
+                    if (_quizAnsweredCorrectly != null && isSelected)
+                      Icon(
+                        isCorrect ? Icons.check_circle : Icons.cancel,
+                        color: Colors.white,
+                      ),
+                  ],
+                ),
+              ),
+            );
+          }),
+          const SizedBox(height: 24),
+          if (_quizAnsweredCorrectly != null)
+            Column(
+              children: [
+                Text(
+                  _quizAnsweredCorrectly! ? 'Great job!' : 'Try again!',
+                  style: TextStyle(
+                    color: _quizAnsweredCorrectly! ? Colors.green : Colors.red,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _selectedQuizOption = null;
+                      _quizAnsweredCorrectly = null;
+                    });
+                    _nextPage();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 32, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Next'),
+                ),
+              ],
+            ),
+          if (_quizAnsweredCorrectly == null)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: Icon(_quizTtsPlaying ? Icons.pause : Icons.volume_up),
+                  onPressed: _quizTtsPlaying
+                      ? _stopQuizTts
+                      : () => _speakQuiz(questionText, options),
+                  color: Colors.teal,
+                  tooltip: 'Read Aloud',
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _onQuizOptionSelected(int index, bool isCorrect) {
+    setState(() {
+      _selectedQuizOption = index;
+      _quizAnsweredCorrectly = isCorrect;
+    });
+  }
+
+  Widget _buildQuizQuestionTTS(String text) {
+    return Text(
+      text,
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 22,
+        fontWeight: FontWeight.bold,
+      ),
+      textAlign: TextAlign.center,
+    );
+  }
+
+  Widget _buildQuizOptionTTS(String text, bool isSelected) {
+    return Text(
+      text,
+      style: TextStyle(
+        color: Colors.white,
+        fontSize: 18,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+      textAlign: TextAlign.center,
+    );
+  }
+
+  void _speakQuiz(String question, List<String> options) async {
+    setState(() {
+      _quizTtsPlaying = true;
+    });
+    await _flutterTts.speak(question);
+    for (final option in options) {
+      await _flutterTts.speak(option);
+    }
+    setState(() {
+      _quizTtsPlaying = false;
+    });
+  }
+
+  void _stopQuizTts() async {
+    await _flutterTts.stop();
+    setState(() {
+      _quizTtsPlaying = false;
+    });
+  }
+
+  Widget _buildControls() {
+    return Container(
+      height: 60.0,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.teal[100]!,
+            Colors.teal[200]!,
           ],
         ),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.text_fields),
+            onPressed: _showVoiceSettings,
+            tooltip: 'Text Settings',
+            color: Colors.black87,
+          ),
+          IconButton(
+            icon: const Icon(Icons.skip_previous),
+            onPressed: _currentPage > 0 ? _previousPage : null,
+            tooltip: 'Previous Page',
+            color: _currentPage > 0 ? Colors.black87 : Colors.grey[400],
+          ),
+          IconButton(
+            icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
+            onPressed: _isTtsInitialized ? _playPause : null,
+            tooltip: isPlaying ? 'Pause' : 'Play',
+            color: _isTtsInitialized ? Colors.black87 : Colors.grey[400],
+          ),
+          IconButton(
+            icon: const Icon(Icons.skip_next),
+            onPressed:
+                _currentPage < _storyAndQuizPages.length - 1 ? _nextPage : null,
+            tooltip: 'Next Page',
+            color: _currentPage < _storyAndQuizPages.length - 1
+                ? Colors.black87
+                : Colors.grey[400],
+          ),
+        ],
       ),
     );
   }

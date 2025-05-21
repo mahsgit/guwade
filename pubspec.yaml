@@ -21,6 +21,7 @@ dependencies:
   # Network
   http: ^1.1.0
   internet_connection_checker: ^3.0.1
+  flutter_secure_storage:
   # Camera
   camera: ^0.11.1
   # Text to Speech
@@ -46,5 +47,6 @@ flutter:
     - assets/home.png
     - assets/cinderella.png
     - assets/story2.png
+    - assets/quiz.png
     # - assets/stories/fairy_tale.png
     # - assets/stories/queen_birds.png

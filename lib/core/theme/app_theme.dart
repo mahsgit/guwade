@@ -1,90 +1,79 @@
 import 'package:flutter/material.dart';
-import '../constants/colors.dart';
+import 'app_colors.dart';
 
 class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
-      primaryColor: AppColors.primary,
-      scaffoldBackgroundColor: Colors.white,
-      fontFamily: 'Nunito',
-      colorScheme: const ColorScheme.light(
+      useMaterial3: true,
+      colorScheme: ColorScheme.light(
         primary: AppColors.primary,
         secondary: AppColors.secondary,
-        tertiary: AppColors.tertiary,
-        surface: Colors.white,
+        error: AppColors.error,
+        background: AppColors.background,
+        surface: AppColors.surface,
       ),
+      scaffoldBackgroundColor: AppColors.background,
+      cardColor: AppColors.card,
+      dividerColor: AppColors.divider,
+
+      // Text Theme
       textTheme: const TextTheme(
-        displayLarge: TextStyle(
-          fontSize: 28.0,
-          fontWeight: FontWeight.bold,
-          color: Colors.black87,
-        ),
-        displayMedium: TextStyle(
-          fontSize: 24.0,
-          fontWeight: FontWeight.bold,
-          color: Colors.black87,
-        ),
-        displaySmall: TextStyle(
-          fontSize: 20.0,
-          fontWeight: FontWeight.bold,
-          color: Colors.black87,
-        ),
-        bodyLarge: TextStyle(
-          fontSize: 18.0,
-          color: Colors.black87,
-        ),
-        bodyMedium: TextStyle(
-          fontSize: 16.0,
-          color: Colors.black87,
-        ),
-        bodySmall: TextStyle(
-          fontSize: 14.0,
-          color: Colors.black54,
-        ),
+        bodyLarge: TextStyle(color: AppColors.textPrimary),
+        bodyMedium: TextStyle(color: AppColors.textPrimary),
+        bodySmall: TextStyle(color: AppColors.textSecondary),
       ),
-      buttonTheme: ButtonThemeData(
-        buttonColor: AppColors.primary,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.0),
-        ),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
-        ),
-      ),
-      cardTheme: CardTheme(
-        elevation: 5.0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15.0),
-        ),
-      ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 0,
-        centerTitle: true,
-        titleTextStyle: TextStyle(
-          fontSize: 20.0,
-          fontWeight: FontWeight.bold,
-          color: Colors.black87,
-        ),
-      ),
+
+      // Input Decoration Theme
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.grey[100],
+        fillColor: AppColors.inputBackground,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15.0),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.inputBorder),
         ),
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 15.0,
-          horizontal: 20.0,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.inputBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.inputFocus),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.error),
+        ),
+      ),
+
+      // Button Theme
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.buttonPrimary,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 32,
+            vertical: 16,
+          ),
+        ),
+      ),
+
+      // Snackbar Theme
+      snackBarTheme: const SnackBarThemeData(
+        backgroundColor: AppColors.textPrimary,
+        contentTextStyle: TextStyle(color: Colors.white),
+        behavior: SnackBarBehavior.floating,
+      ),
+
+      // Card Theme
+      cardTheme: CardTheme(
+        color: AppColors.card,
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
         ),
       ),
     );

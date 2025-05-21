@@ -6,20 +6,27 @@ import '../../domain/entities/story.dart';
 import '../../domain/entities/vocabulary.dart';
 import '../../domain/repositories/storytelling_repository.dart';
 import '../datasources/storytelling_remote_datasource.dart';
+import '../../../auth/domain/repositories/auth_repository.dart';
 
 class StorytellingRepositoryImpl implements StorytellingRepository {
   final StorytellingRemoteDataSource remoteDataSource;
   final NetworkInfo networkInfo;
+  final AuthRepository authRepository;
 
   StorytellingRepositoryImpl({
     required this.remoteDataSource,
     required this.networkInfo,
+    required this.authRepository,
   });
 
   @override
   Future<Either<Failure, List<Story>>> getStories() async {
     if (await networkInfo.isConnected) {
       try {
+        final token = await authRepository.getToken();
+        if (token == null) {
+          return Left(AuthFailure('Session expired. Please login again.'));
+        }
         final stories = await remoteDataSource.getStories();
         return Right(stories);
       } on UnauthorizedException catch (e) {
@@ -36,6 +43,10 @@ class StorytellingRepositoryImpl implements StorytellingRepository {
   Future<Either<Failure, List<Vocabulary>>> getVocabulary() async {
     if (await networkInfo.isConnected) {
       try {
+        final token = await authRepository.getToken();
+        if (token == null) {
+          return Left(AuthFailure('Session expired. Please login again.'));
+        }
         final vocabulary = await remoteDataSource.getVocabulary();
         return Right(vocabulary);
       } on UnauthorizedException catch (e) {

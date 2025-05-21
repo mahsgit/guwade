@@ -4,6 +4,7 @@ import '../../../../core/constants/api_constants.dart';
 import '../../../../core/error/exceptions.dart';
 import '../models/story_model.dart';
 import '../models/vocabulary_model.dart';
+import '../../../auth/data/datasources/auth_local_datasource.dart';
 
 abstract class StorytellingRemoteDataSource {
   Future<List<StoryModel>> getStories();
@@ -12,23 +13,33 @@ abstract class StorytellingRemoteDataSource {
 
 class StorytellingRemoteDataSourceImpl implements StorytellingRemoteDataSource {
   final http.Client client;
-  String token;
+  final AuthLocalDataSource authLocalDataSource;
 
   StorytellingRemoteDataSourceImpl({
     required this.client,
-    required this.token,
+    required this.authLocalDataSource,
   });
 
-  void updateToken(String newToken) {
-    token = newToken;
+  // Helper method to get auth headers
+  Future<Map<String, String>> _getAuthHeaders() async {
+    final token = await authLocalDataSource.getToken();
+    if (token == null || token.isEmpty) {
+      throw UnauthorizedException(message: 'Not authenticated. Please login.');
+    }
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
   }
 
   @override
   Future<List<StoryModel>> getStories() async {
     try {
+      final headers = await _getAuthHeaders();
+      
       final response = await client.get(
         Uri.parse(ApiConstants.baseUrl + ApiConstants.getStories),
-        headers: ApiConstants.authHeaders(token),
+        headers: headers,
       );
 
       if (response.statusCode == 200) {
@@ -50,9 +61,11 @@ class StorytellingRemoteDataSourceImpl implements StorytellingRemoteDataSource {
   @override
   Future<List<VocabularyModel>> getVocabulary() async {
     try {
+      final headers = await _getAuthHeaders();
+      
       final response = await client.get(
         Uri.parse(ApiConstants.baseUrl + ApiConstants.getVocabulary),
-        headers: ApiConstants.authHeaders(token),
+        headers: headers,
       );
 
       if (response.statusCode == 200) {

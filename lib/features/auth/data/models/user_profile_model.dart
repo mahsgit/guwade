@@ -2,42 +2,38 @@ import '../../domain/entities/auth_user.dart';
 
 class UserProfileModel extends AuthUser {
   const UserProfileModel({
-    required super.userId,
-    required super.username,
-    required super.firstName,
-    required super.lastName,
-    required super.role,
-    super.email,
-    super.birthDate,
-    super.nickname,
-    required super.createdAt,
-  });
+    required String id,
+    required String username,
+    required String email,
+    String? profilePicture,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+  }) : super(
+          id: id,
+          username: username,
+          email: email,
+          profilePicture: profilePicture,
+          createdAt: createdAt,
+          updatedAt: updatedAt,
+        );
 
   factory UserProfileModel.fromJson(Map<String, dynamic> json) {
     return UserProfileModel(
-      userId: json['user_id'],
+      id: json['user_id'],
       username: json['username'],
-      firstName: json['first_name'],
-      lastName: json['last_name'],
-      role: json['role'],
-      email: json['email'],
-      birthDate: json['birth_date'] != null
-          ? DateTime.parse(json['birth_date'])
-          : null,
-      nickname: json['nickname'],
+      email: json['email'] ?? '',
+      profilePicture: json['profile_picture'],
       createdAt: DateTime.parse(json['created_at']),
+      updatedAt: DateTime.parse(json['updated_at']),
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'user_id': userId,
+        'user_id': id,
         'username': username,
-        'first_name': firstName,
-        'last_name': lastName,
-        'role': role,
         'email': email,
-        'birth_date': birthDate?.toIso8601String(),
-        'nickname': nickname,
+        'profile_picture': profilePicture,
         'created_at': createdAt.toIso8601String(),
+        'updated_at': updatedAt.toIso8601String(),
       };
 }
