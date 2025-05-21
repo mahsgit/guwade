@@ -40,6 +40,11 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/cinderella.png
-    - assets/home.png
+    - assets/
+    # - assets/stories/
     - assets/main.png
+    - assets/home.png
+    - assets/cinderella.png
+    - assets/story2.png
+    # - assets/stories/fairy_tale.png
+    # - assets/stories/queen_birds.png

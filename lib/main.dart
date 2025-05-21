@@ -6,6 +6,7 @@ import 'features/auth/presentation/pages/login_page.dart';
 import 'features/storytelling/presentation/bloc/storytelling_bloc.dart';
 import 'features/storytelling/presentation/pages/stories_page.dart';
 import 'features/storytelling/presentation/pages/vocabulary_page.dart';
+import 'features/home/presentation/pages/dashboard.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -58,6 +59,7 @@ class MyApp extends StatelessWidget {
         ),
         home: const LoginPage(),
         routes: {
+          '/dashboard': (context) => const DashboardPage(),
           '/home': (context) => const StoriesPage(),
           '/vocabulary': (context) => const VocabularyPage(),
         },
