@@ -20,8 +20,7 @@ import '../../features/storytelling/domain/usecases/get_vocabulary_usecase.dart'
 import '../../features/storytelling/presentation/bloc/storytelling_bloc.dart';
 import 'package:camera/camera.dart';
 import '../../features/storytelling/presentation/bloc/story_bloc.dart';
-import '../../features/storytelling/domain/usecases/get_story_details_usecase.dart';
-import '../../features/storytelling/domain/usecases/detect_emotion.dart';
+
 
 final sl = GetIt.instance;
 
@@ -100,8 +99,7 @@ Future<void> init() async {
   // Storytelling Use cases
   sl.registerLazySingleton(() => GetStoriesUseCase(sl()));
   sl.registerLazySingleton(() => GetVocabularyUseCase(sl()));
-  sl.registerLazySingleton(() => GetStoryDetailsUseCase(sl()));
-  sl.registerLazySingleton(() => DetectEmotionUseCase(sl()));
+
 
   // Storytelling Blocs
   sl.registerFactory(
@@ -111,11 +109,10 @@ Future<void> init() async {
     ),
   );
 
-  sl.registerFactory(() => StoryBloc(
-        getStoriesUseCase: sl(),
-        getStoryDetailsUseCase: sl(),
-        detectEmotionUseCase: sl(),
-      ));
+  // sl.registerFactory(() => StoryBloc(
+  //       getStoriesUseCase: sl(),
+       
+  //     ));
 
   // Camera
   final cameras = await availableCameras();

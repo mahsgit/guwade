@@ -1,274 +1,166 @@
-import 'package:camera/camera.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:equatable/equatable.dart';
-import '../../../../core/usecases/usecase.dart';
-import '../../domain/entities/story.dart';
-import '../../domain/entities/story_detail.dart';
-import '../../domain/usecases/get_stories_usecase.dart';
-import '../../domain/usecases/get_story_details_usecase.dart';
-import '../../domain/usecases/detect_emotion.dart';
+// import 'package:camera/camera.dart';
+// import 'package:flutter_bloc/flutter_bloc.dart';
+// import 'package:equatable/equatable.dart';
+// import '../../../../core/usecases/usecase.dart';
+// import '../../domain/entities/story.dart';
+// import '../../domain/entities/story_detail.dart';
+// import '../../domain/usecases/get_stories_usecase.dart';
 
-// Events
-abstract class StoryEvent extends Equatable {
-  const StoryEvent();
 
-  @override
-  List<Object> get props => [];
-}
+// // Events
+// abstract class StoryEvent extends Equatable {
+//   const StoryEvent();
 
-class GetStoriesEvent extends StoryEvent {}
+//   @override
+//   List<Object> get props => [];
+// }
 
-class GetStoryDetailsEvent extends StoryEvent {
-  final String storyId;
+// class GetStoriesEvent extends StoryEvent {}
 
-  const GetStoryDetailsEvent(this.storyId);
+// class GetStoryDetailsEvent extends StoryEvent {
+//   final String storyId;
 
-  @override
-  List<Object> get props => [storyId];
-}
+//   const GetStoryDetailsEvent(this.storyId);
 
-class UpdateMoodEvent extends StoryEvent {
-  final String mood;
+//   @override
+//   List<Object> get props => [storyId];
+// }
 
-  const UpdateMoodEvent(this.mood);
+// class UpdateMoodEvent extends StoryEvent {
+//   final String mood;
 
-  @override
-  List<Object> get props => [mood];
-}
+//   const UpdateMoodEvent(this.mood);
 
-class DetectEmotionEvent extends StoryEvent {
-  final List<XFile> images;
+//   @override
+//   List<Object> get props => [mood];
+// }
 
-  const DetectEmotionEvent(this.images);
+// class DetectEmotionEvent extends StoryEvent {
+//   final List<XFile> images;
 
-  @override
-  List<Object> get props => [images];
-}
+//   const DetectEmotionEvent(this.images);
 
-class GetNextStoryEvent extends StoryEvent {
-  final String currentStoryId;
+//   @override
+//   List<Object> get props => [images];
+// }
 
-  const GetNextStoryEvent(this.currentStoryId);
+// class GetNextStoryEvent extends StoryEvent {
+//   final String currentStoryId;
 
-  @override
-  List<Object> get props => [currentStoryId];
-}
+//   const GetNextStoryEvent(this.currentStoryId);
 
-// States
-abstract class StoryState extends Equatable {
-  const StoryState();
+//   @override
+//   List<Object> get props => [currentStoryId];
+// }
 
-  @override
-  List<Object?> get props => [];
-}
+// // States
+// abstract class StoryState extends Equatable {
+//   const StoryState();
 
-class StoryInitial extends StoryState {}
+//   @override
+//   List<Object?> get props => [];
+// }
 
-class StoriesLoading extends StoryState {}
+// class StoryInitial extends StoryState {}
 
-class StoriesLoaded extends StoryState {
-  final List<Story> stories;
+// class StoriesLoading extends StoryState {}
 
-  const StoriesLoaded(this.stories);
+// class StoriesLoaded extends StoryState {
+//   final List<Story> stories;
 
-  @override
-  List<Object> get props => [stories];
-}
+//   const StoriesLoaded(this.stories);
 
-class StoryDetailsLoading extends StoryState {}
+//   @override
+//   List<Object> get props => [stories];
+// }
 
-class StoryDetailsLoaded extends StoryState {
-  final StoryDetail storyDetail;
-  final String currentMood;
-  final bool isInterested;
+// class StoryDetailsLoading extends StoryState {}
 
-  const StoryDetailsLoaded(
-    this.storyDetail, {
-    this.currentMood = 'neutral',
-    this.isInterested = true,
-  });
+// class StoryDetailsLoaded extends StoryState {
+//   final StoryDetail storyDetail;
+//   final String currentMood;
+//   final bool isInterested;
 
-  @override
-  List<Object> get props => [storyDetail, currentMood, isInterested];
+//   const StoryDetailsLoaded(
+//     this.storyDetail, {
+//     this.currentMood = 'neutral',
+//     this.isInterested = true,
+//   });
 
-  StoryDetailsLoaded copyWith({
-    StoryDetail? storyDetail,
-    String? currentMood,
-    bool? isInterested,
-  }) {
-    return StoryDetailsLoaded(
-      storyDetail ?? this.storyDetail,
-      currentMood: currentMood ?? this.currentMood,
-      isInterested: isInterested ?? this.isInterested,
-    );
-  }
-}
+//   @override
+//   List<Object> get props => [storyDetail, currentMood, isInterested];
 
-class EmotionDetecting extends StoryState {}
+//   StoryDetailsLoaded copyWith({
+//     StoryDetail? storyDetail,
+//     String? currentMood,
+//     bool? isInterested,
+//   }) {
+//     return StoryDetailsLoaded(
+//       storyDetail ?? this.storyDetail,
+//       currentMood: currentMood ?? this.currentMood,
+//       isInterested: isInterested ?? this.isInterested,
+//     );
+//   }
+// }
 
-class EmotionDetected extends StoryState {
-  final bool isInterested;
-  final String emotion;
+// class EmotionDetecting extends StoryState {}
 
-  const EmotionDetected({
-    required this.isInterested,
-    required this.emotion,
-  });
+// class EmotionDetected extends StoryState {
+//   final bool isInterested;
+//   final String emotion;
 
-  @override
-  List<Object> get props => [isInterested, emotion];
-}
+//   const EmotionDetected({
+//     required this.isInterested,
+//     required this.emotion,
+//   });
 
-class NextStoryLoaded extends StoryState {
-  final StoryDetail storyDetail;
+//   @override
+//   List<Object> get props => [isInterested, emotion];
+// }
 
-  const NextStoryLoaded(this.storyDetail);
+// class NextStoryLoaded extends StoryState {
+//   final StoryDetail storyDetail;
 
-  @override
-  List<Object> get props => [storyDetail];
-}
+//   const NextStoryLoaded(this.storyDetail);
 
-class StoryError extends StoryState {
-  final String message;
+//   @override
+//   List<Object> get props => [storyDetail];
+// }
 
-  const StoryError(this.message);
+// class StoryError extends StoryState {
+//   final String message;
 
-  @override
-  List<Object> get props => [message];
-}
+//   const StoryError(this.message);
 
-// BLoC
-class StoryBloc extends Bloc<StoryEvent, StoryState> {
-  final GetStoriesUseCase getStoriesUseCase;
-  final GetStoryDetailsUseCase getStoryDetailsUseCase;
-  final DetectEmotionUseCase detectEmotionUseCase;
+//   @override
+//   List<Object> get props => [message];
+// }
 
-  StoryBloc({
-    required this.getStoriesUseCase,
-    required this.getStoryDetailsUseCase,
-    required this.detectEmotionUseCase,
-  }) : super(StoryInitial()) {
-    on<GetStoriesEvent>(_onGetStories);
-    on<GetStoryDetailsEvent>(_onGetStoryDetails);
-    on<UpdateMoodEvent>(_onUpdateMood);
-    on<DetectEmotionEvent>(_onDetectEmotion);
-    on<GetNextStoryEvent>(_onGetNextStory);
-  }
+// // BLoC
+// class StoryBloc extends Bloc<StoryEvent, StoryState> {
+//   final GetStoriesUseCase getStoriesUseCase;
 
-  Future<void> _onGetStories(
-    GetStoriesEvent event,
-    Emitter<StoryState> emit,
-  ) async {
-    emit(StoriesLoading());
-    final result = await getStoriesUseCase(NoParams());
-    result.fold(
-      (failure) => emit(StoryError(failure.message)),
-      (stories) => emit(StoriesLoaded(stories)),
-    );
-  }
+//   StoryBloc({
+//     required this.getStoriesUseCase,
+//   }) : super(StoryInitial()) {
+//     on<GetStoriesEvent>(_onGetStories);
+   
+//   }
 
-  Future<void> _onGetStoryDetails(
-    GetStoryDetailsEvent event,
-    Emitter<StoryState> emit,
-  ) async {
-    emit(StoryDetailsLoading());
-    final result = await getStoryDetailsUseCase(event.storyId);
-    result.fold(
-      (failure) => emit(StoryError(failure.message)),
-      (storyDetail) => emit(StoryDetailsLoaded(storyDetail)),
-    );
-  }
+//   Future<void> _onGetStories(
+//     GetStoriesEvent event,
+//     Emitter<StoryState> emit,
+//   ) async {
+//     emit(StoriesLoading());
+//     final result = await getStoriesUseCase(NoParams());
+//     result.fold(
+//       (failure) => emit(StoryError(failure.message)),
+//       (stories) => emit(StoriesLoaded(stories)),
+//     );
+//   }
 
-  Future<void> _onUpdateMood(
-    UpdateMoodEvent event,
-    Emitter<StoryState> emit,
-  ) async {
-    final currentState = state;
-    if (currentState is StoryDetailsLoaded) {
-      emit(currentState.copyWith(currentMood: event.mood));
-    }
-  }
+ 
 
-  Future<void> _onDetectEmotion(
-    DetectEmotionEvent event,
-    Emitter<StoryState> emit,
-  ) async {
-    emit(EmotionDetecting());
+  
 
-    final result = await detectEmotionUseCase(event.images);
-
-    result.fold(
-      (failure) => emit(StoryError(failure.message)),
-      (emotionResult) {
-        emit(EmotionDetected(
-          isInterested: emotionResult.isInterested,
-          emotion: emotionResult.emotion,
-        ));
-
-        // Update the story detail state with the emotion result
-        final currentState = state;
-        if (currentState is StoryDetailsLoaded) {
-          emit(currentState.copyWith(
-            isInterested: emotionResult.isInterested,
-            currentMood: emotionResult.emotion,
-          ));
-        }
-      },
-    );
-  }
-
-  Future<void> _onGetNextStory(
-    GetNextStoryEvent event,
-    Emitter<StoryState> emit,
-  ) async {
-    emit(StoryDetailsLoading());
-
-    try {
-      // First, get all available stories
-      final storiesResult = await getStoriesUseCase(NoParams());
-
-      await storiesResult.fold(
-        (failure) {
-          emit(StoryError(failure.message));
-        },
-        (stories) async {
-          if (stories.isEmpty) {
-            emit(const StoryError("No stories available"));
-            return;
-          }
-
-          // Find the current story index
-          final currentIndex =
-              stories.indexWhere((story) => story.id == event.currentStoryId);
-
-          // Get the next story (or the first one if we're at the end)
-          final nextIndex = (currentIndex + 1) % stories.length;
-          // print("Current Index: $currentIndex, Next Index: $nextIndex");
-          final nextStoryId = stories[nextIndex].id;
-          // print("Next Story ID: $nextStoryId");
-
-          // Get the details of the next story
-          final nextStoryResult = await getStoryDetailsUseCase(nextStoryId);
-
-          nextStoryResult.fold(
-            (failure) => emit(StoryError(failure.message)),
-            (storyDetail) {
-              // Emit a specific NextStoryLoaded state to trigger navigation
-              emit(NextStoryLoaded(storyDetail));
-
-              // Then update the story details state
-              emit(StoryDetailsLoaded(
-                storyDetail,
-                // Reset mood to neutral for the new story
-                currentMood: 'neutral',
-                isInterested: true,
-              ));
-            },
-          );
-        },
-      );
-    } catch (e) {
-      emit(StoryError(e.toString()));
-    }
-  }
-}
+// }

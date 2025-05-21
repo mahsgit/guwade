@@ -1,7 +1,7 @@
+import 'package:buddy/features/storytelling/presentation/pages/story_detail.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/storytelling_bloc.dart';
-import 'package:buddy/core/constants/colors.dart';
 
 /// StorySelectionPage displays a list of stories and categories.
 /// It uses StorytellingBloc for state management.
@@ -44,8 +44,9 @@ class _StorySelectionPageState extends State<StorySelectionPage> {
               _buildHeader(),
               _buildTabSelector(),
               _buildLevelSelector(),
-              _buildReadStorySection(),
-              _buildCategoriesSection(),
+              if (_selectedTabIndex == 0) _buildReadStorySection(),
+              if (_selectedTabIndex == 0) _buildCategoriesSection(),
+              if (_selectedTabIndex == 1) _buildStemSection(),
             ],
           ),
         ),
@@ -158,6 +159,61 @@ class _StorySelectionPageState extends State<StorySelectionPage> {
     );
   }
 
+  // STEM section - Coming soon message
+  Widget _buildStemSection() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.teal[100],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.teal[300]!, width: 2),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.science,
+            size: 64,
+            color: Colors.teal[700],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            "STEM Contest Coming Soon!",
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.teal[700],
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "We're preparing exciting STEM challenges for you. Stay tuned!",
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.teal[700],
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () {},
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.teal[200],
+              foregroundColor: Colors.teal[800],
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text("Notify Me When Available"),
+          ),
+        ],
+      ),
+    );
+  }
+
   // Read a story section
   Widget _buildReadStorySection() {
     return Column(
@@ -181,6 +237,9 @@ class _StorySelectionPageState extends State<StorySelectionPage> {
                 return const Center(child: CircularProgressIndicator());
               } else if (state is StoriesLoaded) {
                 final stories = state.stories;
+                if (stories.isEmpty) {
+                  return _buildNoStoriesMessage();
+                }
                 return ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -189,14 +248,20 @@ class _StorySelectionPageState extends State<StorySelectionPage> {
                     final story = stories[index];
                     return _StoryCard(
                       title: story.title,
-                      // subtitle: story.subtitle ?? 'Story',
                       imageUrl: story.imageUrl,
                       onTap: () {
-                        // Navigate to story detail page
-                        // context.read<StorytellingBloc>().add(
-                        //       SelectStory(storyId: story.id),
-                        //     );
-                        Navigator.pushNamed(context, '/story/detail');
+                        // Navigate to story detail page with all required parameters
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => StoryDetailPage(
+                              storyId: story.id,
+                              title: story.title,
+                              imageUrl: story.imageUrl ?? '',
+                              content: story.storyBody ?? 'No content available',
+                            ),
+                          ),
+                        );
                       },
                     );
                   },
@@ -212,15 +277,37 @@ class _StorySelectionPageState extends State<StorySelectionPage> {
                 children: [
                   _StoryCard(
                     title: 'Fairy Tale Story',
-                    // subtitle: 'Princess',
                     imageUrl: 'assets/fairy_tale.png',
-                    onTap: () => Navigator.pushNamed(context, '/story/detail'),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const StoryDetailPage(
+                          storyId: '1',
+                          title: 'Fairy Tale Story',
+                          imageUrl: 'assets/fairy_tale.png',
+                          content: 'Once upon a time, there was a beautiful princess who lived in a castle. '
+                              'She was known throughout the kingdom for her kindness and wisdom. '
+                              'One day, a mysterious bird with golden feathers appeared at her window.',
+                        ),
+                      ),
+                    ),
                   ),
                   _StoryCard(
                     title: 'Queen of Bird',
-                    // subtitle: 'Adventure',
                     imageUrl: 'assets/queen_bird.png',
-                    onTap: () => Navigator.pushNamed(context, '/story/detail'),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const StoryDetailPage(
+                          storyId: '2',
+                          title: 'Queen of Bird',
+                          imageUrl: 'assets/queen_bird.png',
+                          content: 'In a magical forest, there lived a magnificent bird with feathers of gold and blue. '
+                              'This was no ordinary bird, but the queen of all birds, who could speak the language of humans. '
+                              'She watched over the forest and all its creatures with wisdom and care.',
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               );
@@ -228,6 +315,30 @@ class _StorySelectionPageState extends State<StorySelectionPage> {
           ),
         ),
       ],
+    );
+  }
+
+  // No stories message
+  Widget _buildNoStoriesMessage() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.book_outlined,
+            size: 48,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            "No stories available",
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -285,13 +396,11 @@ class _StorySelectionPageState extends State<StorySelectionPage> {
 /// Story card widget for displaying a single story.
 class _StoryCard extends StatelessWidget {
   final String title;
-  // final String subtitle;
   final String? imageUrl;
   final VoidCallback onTap;
 
   const _StoryCard({
     required this.title,
-    // required this.subtitle,
     required this.imageUrl,
     required this.onTap,
   });
@@ -320,12 +429,19 @@ class _StoryCard extends StatelessWidget {
             // Story image
             ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              child: imageUrl != null
+              child: imageUrl != null && imageUrl!.isNotEmpty
                   ? Image.asset(
                       imageUrl!,
                       height: 150,
                       width: double.infinity,
                       fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 150,
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.broken_image, size: 48),
+                        );
+                      },
                     )
                   : Container(
                       height: 150,
@@ -333,30 +449,17 @@ class _StoryCard extends StatelessWidget {
                       child: const Icon(Icons.image, size: 48),
                     ),
             ),
-            // Story title and subtitle
+            // Story title
             Padding(
               padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  // Text(
-                  //   subtitle,
-                  //   style: TextStyle(
-                  //     color: Colors.grey[600],
-                  //     fontSize: 12,
-                  //   ),
-                  // ),
-                ],
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
