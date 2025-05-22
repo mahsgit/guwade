@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:buddy/features/storytelling/data/datasources/story_local_data_source.dart';
 import 'package:http/http.dart' as http;
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/error/exceptions.dart';
@@ -14,10 +15,12 @@ abstract class StorytellingRemoteDataSource {
 class StorytellingRemoteDataSourceImpl implements StorytellingRemoteDataSource {
   final http.Client client;
   final AuthLocalDataSource authLocalDataSource;
-
+  final StoryLocalDataSource storyLocalDataSource;
+  
   StorytellingRemoteDataSourceImpl({
     required this.client,
     required this.authLocalDataSource,
+    required this.storyLocalDataSource,
   });
 
   // Helper method to get auth headers
@@ -44,7 +47,9 @@ class StorytellingRemoteDataSourceImpl implements StorytellingRemoteDataSource {
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonList = json.decode(response.body);
-        return jsonList.map((json) => StoryModel.fromJson(json)).toList();
+        final stories = jsonList.map((json) => StoryModel.fromJson(json)).toList();
+        await storyLocalDataSource.cacheStories(stories);
+        return stories;
       } else if (response.statusCode == 401) {
         throw UnauthorizedException(
             message: 'Session expired. Please login again.');
@@ -70,6 +75,8 @@ class StorytellingRemoteDataSourceImpl implements StorytellingRemoteDataSource {
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonList = json.decode(response.body);
+        final vocabulary = jsonList.map((json) => VocabularyModel.fromJson(json)).toList();
+        await storyLocalDataSource.cacheVocabulary(vocabulary);
         return jsonList.map((json) => VocabularyModel.fromJson(json)).toList();
       } else if (response.statusCode == 401) {
         throw UnauthorizedException(

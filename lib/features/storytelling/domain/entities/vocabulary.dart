@@ -18,4 +18,6 @@ class Vocabulary extends Equatable {
   @override
   List<Object> get props =>
       [word, synonym, relatedWords, storyTitle, createdAt];
+
+  get definition => null;
 }

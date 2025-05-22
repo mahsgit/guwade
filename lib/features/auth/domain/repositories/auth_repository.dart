@@ -6,6 +6,6 @@ abstract class AuthRepository {
   Future<Either<Failure, String>> login(String username, String password);
   Future<Either<Failure, void>> logout();
   Future<Either<Failure, AuthUser>> getProfile();
-  Future<bool> isAuthenticated();
-  Future<String?> getToken();
+  // Future<bool> isAuthenticated();
+  // Future<String?> getToken();
 }

@@ -1,5 +1,6 @@
 import 'package:buddy/features/auth/data/datasources/auth_local_datasource.dart';
 import 'package:buddy/features/auth/domain/usecases/logout_usecase.dart';
+import 'package:buddy/features/storytelling/data/datasources/story_local_data_source.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:internet_connection_checker/internet_connection_checker.dart';
@@ -19,7 +20,6 @@ import '../../features/storytelling/domain/usecases/get_stories_usecase.dart';
 import '../../features/storytelling/domain/usecases/get_vocabulary_usecase.dart';
 import '../../features/storytelling/presentation/bloc/storytelling_bloc.dart';
 import 'package:camera/camera.dart';
-import '../../features/storytelling/presentation/bloc/story_bloc.dart';
 
 
 final sl = GetIt.instance;
@@ -84,6 +84,7 @@ Future<void> init() async {
     () => StorytellingRemoteDataSourceImpl(
       client: sl(),
       authLocalDataSource: sl(),
+      storyLocalDataSource: sl(),
     ),
   );
 
@@ -92,7 +93,15 @@ Future<void> init() async {
     () => StorytellingRepositoryImpl(
       remoteDataSource: sl(),
       networkInfo: sl(),
-      authRepository: sl(), // Keep authRepository as you've added it
+      authLocalDataSource: sl(),
+      localDataSource: sl(),
+  )
+  );
+
+  // Storytelling Local Data source
+  sl.registerLazySingleton<StoryLocalDataSource>(
+    () => StoryLocalDataSourceImpl(
+      sharedPreferences: sl(),
     ),
   );
 
@@ -109,10 +118,7 @@ Future<void> init() async {
     ),
   );
 
-  // sl.registerFactory(() => StoryBloc(
-  //       getStoriesUseCase: sl(),
-       
-  //     ));
+ 
 
   // Camera
   final cameras = await availableCameras();

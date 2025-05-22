@@ -1,8 +1,8 @@
 import 'package:buddy/features/home/presentation/pages/dashboard.dart';
 import 'package:buddy/features/quiz/presentation/bloc/quiz/quiz_bloc.dart';
-import 'package:buddy/features/quiz/presentation/pages/quiz_page.dart';
 import 'package:buddy/features/storytelling/presentation/bloc/storytelling_bloc.dart';
 import 'package:buddy/features/storytelling/presentation/pages/story.dart';
+import 'package:buddy/features/storytelling/presentation/pages/vocabulary_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/injection/injection_container.dart' as di;
@@ -50,6 +50,7 @@ class MyApp extends StatelessWidget {
           '/': (context) => const LoginPage(),
           '/dashboard': (context) => const DashboardPage(),
           '/story': (context) => const StorySelectionPage(),
+          '/vocabulary': (context) => const VocabularyPage(),
           // '/quiz': (context) => const QuizPage(),
         },
       ),

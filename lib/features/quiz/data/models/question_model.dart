@@ -2,18 +2,12 @@ import 'package:buddy/features/quiz/domain/entities/question.dart';
 
 class QuestionModel extends Question {
   const QuestionModel({
-    required String id,
-    required String questionText,
-    required String imagePath,
-    required List<OptionModel> options,
-    required String correctOptionId,
-  }) : super(
-          id: id,
-          questionText: questionText,
-          imagePath: imagePath,
-          options: options,
-          correctOptionId: correctOptionId,
-        );
+    required super.id,
+    required super.questionText,
+    required super.imagePath,
+    required List<OptionModel> super.options,
+    required super.correctOptionId,
+  });
 
   factory QuestionModel.fromJson(Map<String, dynamic> json) {
     return QuestionModel(
@@ -42,14 +36,10 @@ class QuestionModel extends Question {
 
 class OptionModel extends Option {
   const OptionModel({
-    required String id,
-    required String text,
-    String? color,
-  }) : super(
-          id: id,
-          text: text,
-          color: color,
-        );
+    required super.id,
+    required super.text,
+    super.color,
+  });
 
   factory OptionModel.fromJson(Map<String, dynamic> json) {
     return OptionModel(

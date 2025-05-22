@@ -17,10 +17,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required this.networkInfo,
   });
 
-  @override
-  Future<String?> getToken() async {
-    return await localDataSource.getToken();
-  }
+ 
 
   @override
   Future<Either<Failure, String>> login(
@@ -32,8 +29,6 @@ class AuthRepositoryImpl implements AuthRepository {
       if (isConnected) {
         // Try online login
         final result = await remoteDataSource.login(username, password);
-        // Cache the credentials for offline use
-        await localDataSource.cacheUserCredentials(username, password);
         // Token is already cached in the remote data source
         return Right(result.accessToken);
       } else {
@@ -72,7 +67,6 @@ class AuthRepositoryImpl implements AuthRepository {
 
       if (isConnected) {
         final result = await remoteDataSource.getProfile();
-        await localDataSource.cacheUserProfile(result);
         return Right(result);
       } else {
         final cachedProfile = await localDataSource.getCachedUserProfile();
@@ -87,14 +81,5 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  @override
-  Future<bool> isAuthenticated() async {
-    try {
-      // Check if token exists
-      final token = await localDataSource.getToken();
-      return token != null && token.isNotEmpty;
-    } catch (e) {
-      return false;
-    }
-  }
+
 }

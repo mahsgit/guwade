@@ -1,4 +1,5 @@
 import 'package:buddy/features/storytelling/presentation/pages/story_detail.dart';
+import 'package:buddy/features/storytelling/presentation/widgets/story_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/storytelling_bloc.dart';
@@ -12,20 +13,56 @@ class StorySelectionPage extends StatefulWidget {
   State<StorySelectionPage> createState() => _StorySelectionPageState();
 }
 
-class _StorySelectionPageState extends State<StorySelectionPage> {
+class _StorySelectionPageState extends State<StorySelectionPage> with AutomaticKeepAliveClientMixin {
   int _selectedTabIndex = 0;
   final List<String> _tabs = ['Story', 'STEM'];
-  int _selectedStoryLevel = 5; // Default selected level
+  bool _isLoading = false;
+  bool _initialLoadDone = false;
+
+  @override
+  bool get wantKeepAlive => true; // Keep the state alive when navigating
 
   @override
   void initState() {
     super.initState();
-    // Load stories when the page is initialized
+    // Only load stories if they haven't been loaded yet
+    if (!_initialLoadDone) {
+      _loadStories();
+    }
+  }
+
+  void _loadStories() {
+    setState(() {
+      _isLoading = true;
+    });
+    
+    // Check if stories are already loaded
+    final currentState = context.read<StorytellingBloc>().state;
+    if (currentState is StoriesLoaded && currentState.stories.isNotEmpty) {
+      setState(() {
+        _isLoading = false;
+        _initialLoadDone = true;
+      });
+      return;
+    }
+    
+    // Dispatch the LoadStories event
     context.read<StorytellingBloc>().add(LoadStories());
+    
+    // Set a fallback timer in case the bloc doesn't respond
+    Future.delayed(const Duration(seconds: 10), () {
+      if (mounted && _isLoading) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
+    
     return Scaffold(
       backgroundColor: Colors.yellow[50],
       appBar: AppBar(
@@ -35,6 +72,13 @@ class _StorySelectionPageState extends State<StorySelectionPage> {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        actions: [
+          // Add a refresh button
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.black),
+            onPressed: _loadStories,
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -43,7 +87,6 @@ class _StorySelectionPageState extends State<StorySelectionPage> {
             children: [
               _buildHeader(),
               _buildTabSelector(),
-              _buildLevelSelector(),
               if (_selectedTabIndex == 0) _buildReadStorySection(),
               if (_selectedTabIndex == 0) _buildCategoriesSection(),
               if (_selectedTabIndex == 1) _buildStemSection(),
@@ -69,6 +112,14 @@ class _StorySelectionPageState extends State<StorySelectionPage> {
           'assets/main.png',
           fit: BoxFit.cover,
           width: double.infinity,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: Colors.grey[300],
+              child: const Center(
+                child: Icon(Icons.image_not_supported, size: 48, color: Colors.grey),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -107,48 +158,6 @@ class _StorySelectionPageState extends State<StorySelectionPage> {
                           ? FontWeight.bold
                           : FontWeight.normal,
                     ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Level selector (1-6)
-  Widget _buildLevelSelector() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      height: 50,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: List.generate(
-          6,
-          (index) => GestureDetector(
-            onTap: () => setState(() => _selectedStoryLevel = index + 1),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: _selectedStoryLevel == index + 1
-                    ? Colors.yellow[400]
-                    : Colors.white,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.yellow[400]!,
-                  width: 2,
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  '${index + 1}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: _selectedStoryLevel == index + 1
-                        ? Colors.white
-                        : Colors.black,
                   ),
                 ),
               ),
@@ -231,24 +240,41 @@ class _StorySelectionPageState extends State<StorySelectionPage> {
         ),
         SizedBox(
           height: 220,
-          child: BlocBuilder<StorytellingBloc, StorytellingState>(
-            builder: (context, state) {
+          child: BlocConsumer<StorytellingBloc, StorytellingState>(
+            listener: (context, state) {
+              // Update loading state based on bloc state
               if (state is StoriesLoading) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (state is StoriesLoaded) {
+                setState(() {
+                  _isLoading = true;
+                });
+              } else {
+                setState(() {
+                  _isLoading = false;
+                  _initialLoadDone = true;
+                });
+              }
+            },
+            builder: (context, state) {
+              // Show loading indicator
+              if (state is StoriesLoading || (_isLoading && !_initialLoadDone)) {
+                return _buildLoadingIndicator();
+              }
+              
+              // Show loaded stories
+              else if (state is StoriesLoaded) {
                 final stories = state.stories;
                 if (stories.isEmpty) {
                   return _buildNoStoriesMessage();
                 }
+                
                 return ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: stories.length,
                   itemBuilder: (context, index) {
                     final story = stories[index];
-                    return _StoryCard(
-                      title: story.title,
-                      imageUrl: story.imageUrl,
+                    return StoryCard(
+                      story: story,
                       onTap: () {
                         // Navigate to story detail page with all required parameters
                         Navigator.push(
@@ -261,60 +287,84 @@ class _StorySelectionPageState extends State<StorySelectionPage> {
                               content: story.storyBody ?? 'No content available',
                             ),
                           ),
-                        );
+                        ).then((_) {
+                          // This ensures the state is refreshed when returning
+                          setState(() {});
+                        });
                       },
                     );
                   },
                 );
-              } else if (state is StoriesError) {
-                return Center(child: Text(state.message));
               }
               
-              // Fallback with sample data if no stories are loaded yet
-              return ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  _StoryCard(
-                    title: 'Fairy Tale Story',
-                    imageUrl: 'assets/fairy_tale.png',
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const StoryDetailPage(
-                          storyId: '1',
-                          title: 'Fairy Tale Story',
-                          imageUrl: 'assets/fairy_tale.png',
-                          content: 'Once upon a time, there was a beautiful princess who lived in a castle. '
-                              'She was known throughout the kingdom for her kindness and wisdom. '
-                              'One day, a mysterious bird with golden feathers appeared at her window.',
-                        ),
-                      ),
-                    ),
-                  ),
-                  _StoryCard(
-                    title: 'Queen of Bird',
-                    imageUrl: 'assets/queen_bird.png',
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const StoryDetailPage(
-                          storyId: '2',
-                          title: 'Queen of Bird',
-                          imageUrl: 'assets/queen_bird.png',
-                          content: 'In a magical forest, there lived a magnificent bird with feathers of gold and blue. '
-                              'This was no ordinary bird, but the queen of all birds, who could speak the language of humans. '
-                              'She watched over the forest and all its creatures with wisdom and care.',
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              );
+              // Show error message
+              else if (state is StoriesError) {
+                return _buildErrorMessage(state.message);
+              }
+              
+              // Show fallback content with sample data
+              return _buildFallbackContent();
             },
           ),
         ),
       ],
+    );
+  }
+
+  // Loading indicator
+  Widget _buildLoadingIndicator() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.amber),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            "Loading stories...",
+            style: TextStyle(
+              color: Colors.amber[800],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Error message
+  Widget _buildErrorMessage(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 48,
+            color: Colors.red[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.red[700],
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: _loadStories,
+            icon: const Icon(Icons.refresh),
+            label: const Text("Try Again"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -337,8 +387,62 @@ class _StorySelectionPageState extends State<StorySelectionPage> {
               color: Colors.grey[600],
             ),
           ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: _loadStories,
+            icon: const Icon(Icons.refresh),
+            label: const Text("Refresh"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber,
+              foregroundColor: Colors.white,
+            ),
+          ),
         ],
       ),
+    );
+  }
+
+  // Fallback content with sample data
+  Widget _buildFallbackContent() {
+    return ListView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      children: [
+        _StoryCard(
+          title: 'Fairy Tale Story',
+          imageUrl: 'assets/fairy_tale.png',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const StoryDetailPage(
+                storyId: '1',
+                title: 'Fairy Tale Story',
+                imageUrl: 'assets/fairy_tale.png',
+                content: 'Once upon a time, there was a beautiful princess who lived in a castle. '
+                    'She was known throughout the kingdom for her kindness and wisdom. '
+                    'One day, a mysterious bird with golden feathers appeared at her window.',
+              ),
+            ),
+          ),
+        ),
+        _StoryCard(
+          title: 'Queen of Bird',
+          imageUrl: 'assets/queen_bird.png',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const StoryDetailPage(
+                storyId: '2',
+                title: 'Queen of Bird',
+                imageUrl: 'assets/queen_bird.png',
+                content: 'In a magical forest, there lived a magnificent bird with feathers of gold and blue. '
+                    'This was no ordinary bird, but the queen of all birds, who could speak the language of humans. '
+                    'She watched over the forest and all its creatures with wisdom and care.',
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -368,27 +472,66 @@ class _StorySelectionPageState extends State<StorySelectionPage> {
                 title: "Children's Comic",
                 subtitle: "100 Stories",
                 color: Colors.indigo[900]!,
-                imageUrl: 'assets/category_comic.png',
-                onTap: () {},
+                imageUrl: 'assets/comic.png',
+                onTap: () => _showCategoryComingSoon(context, "Children's Comic"),
               ),
               _CategoryItem(
                 title: "Adventure",
                 subtitle: "85 Stories",
                 color: Colors.orange[900]!,
-                imageUrl: 'assets/category_adventure.png',
-                onTap: () {},
+                imageUrl: 'assets/adventure.png',
+                onTap: () => _showCategoryComingSoon(context, "Adventure"),
               ),
               _CategoryItem(
                 title: "Fantasy",
                 subtitle: "120 Stories",
                 color: Colors.red[900]!,
-                imageUrl: 'assets/category_fantasy.png',
-                onTap: () {},
+                imageUrl: 'assets/fantasy.png',
+                onTap: () => _showCategoryComingSoon(context, "Fantasy"),
               ),
             ],
           ),
         ),
       ],
+    );
+  }
+  
+  // Show category coming soon dialog
+  void _showCategoryComingSoon(BuildContext context, String category) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(
+          "$category Coming Soon!",
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.upcoming,
+              size: 64,
+              color: Colors.amber[700],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              "We're preparing exciting $category stories for you. Stay tuned!",
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -426,39 +569,39 @@ class _StoryCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Story image
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              child: imageUrl != null && imageUrl!.isNotEmpty
-                  ? Image.asset(
-                      imageUrl!,
-                      height: 150,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          height: 150,
-                          color: Colors.grey[300],
-                          child: const Icon(Icons.broken_image, size: 48),
-                        );
-                      },
-                    )
-                  : Container(
-                      height: 150,
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.image, size: 48),
-                    ),
+            // Story image - Using Container with DecorationImage
+            Container(
+              height: 150,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                image: imageUrl != null && imageUrl!.isNotEmpty
+                    ? DecorationImage(
+                        image: AssetImage(imageUrl!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+                color: Colors.grey[300],
+              ),
+              // Show placeholder icon only if no image URL is provided
+              child: imageUrl == null || imageUrl!.isEmpty
+                  ? const Icon(Icons.image, size: 48, color: Colors.grey)
+                  : null,
             ),
-            // Story title
-            Padding(
+            // Story title with background for better readability
+            Container(
+              width: double.infinity,
               padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+              ),
               child: Text(
                 title,
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -525,15 +668,25 @@ class _CategoryItem extends StatelessWidget {
                 ],
               ),
             ),
-            // Category image
+            // Category image - Using Container with DecorationImage
             Positioned(
               right: -10,
               bottom: -10,
-              child: CircleAvatar(
-                radius: 30,
-                backgroundColor: Colors.transparent,
-                backgroundImage: imageUrl != null ? AssetImage(imageUrl!) : null,
-                child: imageUrl == null ? const Icon(Icons.category, color: Colors.white) : null,
+              child: Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  image: imageUrl != null
+                      ? DecorationImage(
+                          image: AssetImage(imageUrl!),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
+                child: imageUrl == null
+                    ? const Icon(Icons.category, color: Colors.white, size: 30)
+                    : null,
               ),
             ),
           ],

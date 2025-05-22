@@ -1,3 +1,5 @@
+import 'package:buddy/features/auth/data/datasources/auth_local_datasource.dart';
+import 'package:buddy/features/storytelling/data/datasources/story_local_data_source.dart';
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
@@ -6,24 +8,26 @@ import '../../domain/entities/story.dart';
 import '../../domain/entities/vocabulary.dart';
 import '../../domain/repositories/storytelling_repository.dart';
 import '../datasources/storytelling_remote_datasource.dart';
-import '../../../auth/domain/repositories/auth_repository.dart';
 
 class StorytellingRepositoryImpl implements StorytellingRepository {
   final StorytellingRemoteDataSource remoteDataSource;
   final NetworkInfo networkInfo;
-  final AuthRepository authRepository;
+  final AuthLocalDataSource authLocalDataSource;
+  final StoryLocalDataSource localDataSource;
 
   StorytellingRepositoryImpl({
     required this.remoteDataSource,
+  
     required this.networkInfo,
-    required this.authRepository,
+    required this.authLocalDataSource,
+    required this.localDataSource,
   });
 
   @override
   Future<Either<Failure, List<Story>>> getStories() async {
     if (await networkInfo.isConnected) {
       try {
-        final token = await authRepository.getToken();
+        final token = await authLocalDataSource.getToken();
         if (token == null) {
           return Left(AuthFailure('Session expired. Please login again.'));
         }
@@ -31,11 +35,12 @@ class StorytellingRepositoryImpl implements StorytellingRepository {
         return Right(stories);
       } on UnauthorizedException catch (e) {
         return Left(AuthFailure(e.message));
-      } on ServerException catch (e) {
+      } on ServerException {
         return Left(ServerFailure('Failed to get stories'));
       }
     } else {
-      return Left(NetworkFailure('No internet connection'));
+      final stories = await localDataSource.getStories();
+      return Right(stories);
     }
   }
 
@@ -43,7 +48,7 @@ class StorytellingRepositoryImpl implements StorytellingRepository {
   Future<Either<Failure, List<Vocabulary>>> getVocabulary() async {
     if (await networkInfo.isConnected) {
       try {
-        final token = await authRepository.getToken();
+        final token = await authLocalDataSource.getToken();
         if (token == null) {
           return Left(AuthFailure('Session expired. Please login again.'));
         }
@@ -51,11 +56,12 @@ class StorytellingRepositoryImpl implements StorytellingRepository {
         return Right(vocabulary);
       } on UnauthorizedException catch (e) {
         return Left(AuthFailure(e.message));
-      } on ServerException catch (e) {
+      } on ServerException {
         return Left(ServerFailure('Failed to get vocabulary'));
       }
     } else {
-      return Left(NetworkFailure('No internet connection'));
+      final vocabulary = await localDataSource.getVocabulary();
+      return Right(vocabulary);
     }
   }
 }
