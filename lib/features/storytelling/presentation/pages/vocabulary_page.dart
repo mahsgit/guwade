@@ -1,4 +1,3 @@
-// vocabulary_page.dart
 import 'package:buddy/features/quiz/presentation/pages/quiz_page.dart';
 import 'package:buddy/features/storytelling/domain/entities/vocabulary.dart';
 import 'package:flutter/material.dart';
@@ -16,20 +15,20 @@ class VocabularyPage extends StatefulWidget {
 class _VocabularyPageState extends State<VocabularyPage> {
   late FlutterTts _flutterTts;
   int _selectedIndex = -1;
-  
+
   @override
   void initState() {
     super.initState();
     context.read<StorytellingBloc>().add(LoadVocabulary());
     _initTts();
   }
-  
+
   @override
   void dispose() {
     _flutterTts.stop();
     super.dispose();
   }
-  
+
   Future<void> _initTts() async {
     _flutterTts = FlutterTts();
     await _flutterTts.setLanguage("en-US");
@@ -37,13 +36,12 @@ class _VocabularyPageState extends State<VocabularyPage> {
     await _flutterTts.setSpeechRate(0.4);
     await _flutterTts.setPitch(1.0);
   }
-  
+
   Future<void> _speakWord(String word, String meaning) async {
     await _flutterTts.speak("$word means $meaning");
   }
 
   void _navigateToQuiz(List<Vocabulary> vocabulary) {
-    // Make sure we have vocabulary data
     if (vocabulary.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -54,80 +52,79 @@ class _VocabularyPageState extends State<VocabularyPage> {
       return;
     }
 
-    // Navigate to quiz page
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => QuizPage(
           vocabulary: vocabulary,
           onComplete: () {
-            // This callback is called when the quiz is completed
-            Navigator.pop(context); // Return to vocabulary page
-            _showAchievementDialog(); // Show achievement dialog
+            Navigator.pop(context);
+            _showAchievementDialog();
           },
         ),
       ),
     );
   }
+
   void _showAchievementDialog() {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
         ),
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                "Lesson completed!",
+                "Great Job!",
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Colors.purple,
+                  color: Color(0xFF6D4E9A), // Soft purple
                 ),
               ),
               const SizedBox(height: 20),
               Image.asset(
-                'assets/achievement.png', // Make sure this asset exists
+                'assets/achievement.png',
                 height: 120,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
                     height: 120,
                     width: 120,
                     decoration: BoxDecoration(
-                      color: Colors.purple[100],
+                      color: const Color(0xFFEDE7F6), // Light purple
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                      Icons.emoji_events,
+                      Icons.star,
                       size: 60,
-                      color: Colors.purple,
+                      color: Color(0xFF6D4E9A),
                     ),
                   );
                 },
               ),
               const SizedBox(height: 20),
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.blue[100],
+                  color: const Color(0xFFE3F2FD), // Light blue
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(Icons.diamond, color: Colors.blue),
+                  children: [
+                    Icon(Icons.star, color: Color(0xFF1976D2)),
                     SizedBox(width: 8),
                     Text(
-                      "12",
+                      "10",
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -142,21 +139,21 @@ class _VocabularyPageState extends State<VocabularyPage> {
                 children: [
                   _AchievementStat(
                     icon: Icons.bolt,
-                    value: "24",
-                    label: "Total XP",
-                    color: Colors.orange,
+                    value: "20 XP",
+                    label: "Points",
+                    color: const Color(0xFFFB8C00), // Soft orange
                   ),
                   _AchievementStat(
                     icon: Icons.timer,
-                    value: "1:45",
+                    value: "1:30",
                     label: "Time",
-                    color: Colors.teal,
+                    color: const Color(0xFF00695C), // Soft teal
                   ),
                   _AchievementStat(
-                    icon: Icons.tablet,
-                    value: "87%",
-                    label: "Accuracy",
-                    color: Colors.pink,
+                    icon: Icons.check_circle,
+                    value: "85%",
+                    label: "Score",
+                    color: const Color(0xFFC2185B), // Soft pink
                   ),
                 ],
               ),
@@ -164,7 +161,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
+                  backgroundColor: const Color(0xFF6D4E9A),
                   minimumSize: const Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25),
@@ -175,6 +172,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
               ),
@@ -189,13 +187,13 @@ class _VocabularyPageState extends State<VocabularyPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Colors.purple[100]!,
-              Colors.purple[50]!,
+              Color(0xFFEDE7F6), // Light purple
+              Color(0xFFF3E5F5), // Slightly lighter purple
             ],
           ),
         ),
@@ -208,7 +206,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back),
+                      icon: const Icon(Icons.arrow_back, color: Color(0xFF6D4E9A)),
                       onPressed: () => Navigator.pop(context),
                     ),
                     const Expanded(
@@ -217,44 +215,43 @@ class _VocabularyPageState extends State<VocabularyPage> {
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
+                          color: Color(0xFF6D4E9A),
                         ),
                         textAlign: TextAlign.center,
                       ),
                     ),
-                    const SizedBox(width: 48), // Balance the back button
+                    const SizedBox(width: 48),
                   ],
                 ),
               ),
-              
+
               // Quiz Button
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
                 child: BlocBuilder<StorytellingBloc, StorytellingState>(
                   builder: (context, state) {
                     bool isEnabled = state is VocabularyLoaded && state.vocabulary.isNotEmpty;
-                    
                     return ElevatedButton.icon(
-                      onPressed: isEnabled 
-                          ? () => _navigateToQuiz((state).vocabulary)
+                      onPressed: isEnabled
+                          ? () => _navigateToQuiz((state as VocabularyLoaded).vocabulary)
                           : null,
-                      icon: const Icon(Icons.quiz),
-                      label: const Text("Start Quiz"),
+                      icon: const Icon(Icons.quiz, color: Colors.white),
+                      label: const Text("Start Quiz", style: TextStyle(color: Colors.white)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.white,
-                        disabledBackgroundColor: Colors.grey[300],
+                        backgroundColor: isEnabled ? const Color(0xFF6D4E9A) : Colors.grey[400]!,
                         minimumSize: const Size(double.infinity, 50),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(25),
                         ),
+                        elevation: 2,
                       ),
                     );
                   },
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Vocabulary List
               Expanded(
                 child: BlocBuilder<StorytellingBloc, StorytellingState>(
@@ -265,13 +262,13 @@ class _VocabularyPageState extends State<VocabularyPage> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.purple),
+                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6D4E9A)),
                             ),
                             const SizedBox(height: 16),
                             Text(
                               "Loading vocabulary...",
                               style: TextStyle(
-                                color: Colors.purple[800],
+                                color: Colors.grey[700],
                                 fontSize: 16,
                               ),
                             ),
@@ -285,48 +282,46 @@ class _VocabularyPageState extends State<VocabularyPage> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
-                                Icons.menu_book,
+                                Icons.book_outlined,
                                 size: 64,
-                                color: Colors.purple[200],
+                                color: Colors.grey[400],
                               ),
                               const SizedBox(height: 16),
-                              const Text(
+                              Text(
                                 "No vocabulary words yet!",
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
+                                  color: Colors.grey[700],
                                 ),
                               ),
                               const SizedBox(height: 8),
-                              const Text(
+                              Text(
                                 "Complete more stories to build your vocabulary.",
                                 textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 16),
+                                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                               ),
                             ],
                           ),
                         );
                       }
-                      
+
                       return ListView.builder(
                         padding: const EdgeInsets.all(16),
                         itemCount: state.vocabulary.length,
                         itemBuilder: (context, index) {
                           final vocab = state.vocabulary[index];
                           final isSelected = _selectedIndex == index;
-                          
-                          // Assign a color based on index
+
                           final List<Color> cardColors = [
-                            Colors.blue[100]!,
-                            Colors.green[100]!,
-                            Colors.orange[100]!,
-                            Colors.pink[100]!,
-                            Colors.teal[100]!,
-                            Colors.purple[100]!,
+                            const Color(0xFFE8EAF6), // Light blue-gray
+                            const Color(0xECEFF1),  // Light gray
+                            const Color(0xE0F7FA), // Light teal
+                            const Color(0xF5F5F5), // Very light gray
                           ];
-                          
+
                           final cardColor = cardColors[index % cardColors.length];
-                          
+
                           return GestureDetector(
                             onTap: () {
                               setState(() {
@@ -338,52 +333,49 @@ class _VocabularyPageState extends State<VocabularyPage> {
                             },
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 300),
-                              margin: const EdgeInsets.only(bottom: 16),
+                              margin: const EdgeInsets.only(bottom: 12),
                               decoration: BoxDecoration(
                                 color: cardColor,
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(12),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 4),
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
                                   ),
                                 ],
                               ),
                               child: Column(
                                 children: [
-                                  // Word and speaker
                                   Padding(
                                     padding: const EdgeInsets.all(16),
                                     child: Row(
                                       children: [
-                                        // Word icon
                                         Container(
-                                          width: 50,
-                                          height: 50,
+                                          width: 40,
+                                          height: 40,
                                           decoration: BoxDecoration(
                                             color: Colors.white,
                                             shape: BoxShape.circle,
                                             border: Border.all(
                                               color: Colors.grey[300]!,
-                                              width: 2,
+                                              width: 1,
                                             ),
                                           ),
                                           child: Center(
                                             child: Text(
-                                              vocab.word.isNotEmpty 
+                                              vocab.word.isNotEmpty
                                                   ? vocab.word.substring(0, 1).toUpperCase()
                                                   : "?",
                                               style: TextStyle(
-                                                fontSize: 24,
+                                                fontSize: 18,
                                                 fontWeight: FontWeight.bold,
                                                 color: Colors.grey[800],
                                               ),
                                             ),
                                           ),
                                         ),
-                                        const SizedBox(width: 16),
-                                        // Word and story title
+                                        const SizedBox(width: 12),
                                         Expanded(
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -391,31 +383,29 @@ class _VocabularyPageState extends State<VocabularyPage> {
                                               Text(
                                                 vocab.word,
                                                 style: const TextStyle(
-                                                  fontSize: 20,
+                                                  fontSize: 18,
                                                   fontWeight: FontWeight.bold,
+                                                  color: Color(0xFF6D4E9A),
                                                 ),
                                               ),
                                               Text(
                                                 "From: ${vocab.storyTitle}",
                                                 style: TextStyle(
-                                                  fontSize: 14,
-                                                  color: Colors.grey[700],
+                                                  fontSize: 12,
+                                                  color: Colors.grey[600],
                                                 ),
                                               ),
                                             ],
                                           ),
                                         ),
-                                        // Speaker button
                                         IconButton(
                                           icon: const Icon(Icons.volume_up),
                                           onPressed: () => _speakWord(vocab.word, vocab.synonym),
-                                          color: Colors.blue[700],
+                                          color: const Color(0xFF6D4E9A),
                                         ),
                                       ],
                                     ),
                                   ),
-                                  
-                                  // Expanded content
                                   if (isSelected)
                                     Container(
                                       width: double.infinity,
@@ -423,19 +413,18 @@ class _VocabularyPageState extends State<VocabularyPage> {
                                       decoration: const BoxDecoration(
                                         color: Colors.white,
                                         borderRadius: BorderRadius.only(
-                                          bottomLeft: Radius.circular(16),
-                                          bottomRight: Radius.circular(16),
+                                          bottomLeft: Radius.circular(12),
+                                          bottomRight: Radius.circular(12),
                                         ),
                                       ),
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          // Meaning
                                           Row(
                                             children: [
                                               const Icon(
                                                 Icons.lightbulb_outline,
-                                                color: Colors.amber,
+                                                color: Color(0xFF6D4E9A),
                                               ),
                                               const SizedBox(width: 8),
                                               Expanded(
@@ -443,21 +432,20 @@ class _VocabularyPageState extends State<VocabularyPage> {
                                                   "Meaning: ${vocab.synonym}",
                                                   style: const TextStyle(
                                                     fontSize: 16,
-                                                    fontWeight: FontWeight.w500,
+                                                    color: Color(0xFF6D4E9A),
                                                   ),
                                                 ),
                                               ),
                                             ],
                                           ),
                                           const SizedBox(height: 12),
-                                          
-                                          // Related words
                                           if (vocab.relatedWords.isNotEmpty) ...[
                                             const Text(
                                               "Related Words:",
                                               style: TextStyle(
                                                 fontSize: 14,
                                                 fontWeight: FontWeight.bold,
+                                                color: Color(0xFF6D4E9A),
                                               ),
                                             ),
                                             const SizedBox(height: 8),
@@ -468,12 +456,12 @@ class _VocabularyPageState extends State<VocabularyPage> {
                                                   .map(
                                                     (word) => Container(
                                                       padding: const EdgeInsets.symmetric(
-                                                        horizontal: 12,
-                                                        vertical: 6,
+                                                        horizontal: 10,
+                                                        vertical: 4,
                                                       ),
                                                       decoration: BoxDecoration(
                                                         color: Colors.grey[200],
-                                                        borderRadius: BorderRadius.circular(20),
+                                                        borderRadius: BorderRadius.circular(16),
                                                       ),
                                                       child: Text(
                                                         word,
@@ -500,14 +488,14 @@ class _VocabularyPageState extends State<VocabularyPage> {
                           children: [
                             Icon(
                               Icons.error_outline,
-                              size: 64,
-                              color: Colors.red[300],
+                              size: 48,
+                              color: Colors.grey[400],
                             ),
                             const SizedBox(height: 16),
                             Text(
                               state.message,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 16),
+                              style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                             ),
                             const SizedBox(height: 16),
                             ElevatedButton.icon(
@@ -517,11 +505,12 @@ class _VocabularyPageState extends State<VocabularyPage> {
                               icon: const Icon(Icons.refresh),
                               label: const Text("Try Again"),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.purple,
+                                backgroundColor: const Color(0xFF6D4E9A),
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(20),
                                 ),
+                                elevation: 2,
                               ),
                             ),
                           ],
@@ -556,20 +545,21 @@ class _AchievementStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
         children: [
-          Icon(icon, color: color),
+          Icon(icon, color: color, size: 20),
           const SizedBox(height: 4),
           Text(
             value,
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: color,
+              fontSize: 14,
             ),
           ),
           Text(

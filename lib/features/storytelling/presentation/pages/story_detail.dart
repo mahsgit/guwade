@@ -31,10 +31,12 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
   double _speechRate = 0.4;
   String _currentVoice = 'en-US';
   List<Map<String, dynamic>> _voices = [];
+  String _selectedGender = 'female'; // Default to female voice
 
   List<String> _storyPages = [];
   List<Map<String, dynamic>> _contentPages = [];
   int _currentPageIndex = 0;
+  int _correctAnswers = 0; // Track correct answers for achievement
 
   String _currentWord = "";
   List<String> _currentPageWords = [];
@@ -60,8 +62,13 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
           .where((v) => v['locale'].startsWith('en') || v['locale'].startsWith('es'))
           .toList();
 
-      if (_voices.isNotEmpty) {
-        await _flutterTts.setVoice({"name": _voices.first['name'], "locale": _currentVoice});
+      // Filter for male and female voices based on name hints
+      final femaleVoices = _voices.where((v) => v['name']?.toLowerCase().contains('female') ?? false).toList();
+      final maleVoices = _voices.where((v) => v['name']?.toLowerCase().contains('male') ?? false).toList();
+      final availableVoices = femaleVoices.isNotEmpty ? femaleVoices : maleVoices.isNotEmpty ? maleVoices : _voices;
+
+      if (availableVoices.isNotEmpty) {
+        await _flutterTts.setVoice({"name": availableVoices.first['name'], "locale": _currentVoice});
       }
     } catch (e) {
       print("Error loading voices: $e");
@@ -145,6 +152,10 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
             onPressed: _showLanguageDialog,
           ),
           IconButton(
+            icon: const Icon(Icons.mic, color: Colors.white, size: 30),
+            onPressed: _showVoiceDialog,
+          ),
+          IconButton(
             icon: const Icon(Icons.download, color: Colors.white, size: 30),
             onPressed: () {},
           ),
@@ -156,11 +167,10 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
             _contentPages = [];
             for (int i = 0; i < _storyPages.length; i++) {
               _contentPages.add({'type': 'story', 'content': _storyPages[i]});
-            }
-            // Add a single quiz page at the end if vocabulary exists
-            final vocabForQuiz = _extractVocabulary(state.vocabulary);
-            if (vocabForQuiz.isNotEmpty) {
-              _contentPages.add({'type': 'quiz', 'vocabulary': vocabForQuiz});
+              final vocab = _extractVocabularyFromPage(state.vocabulary, i);
+              if (i > 0 && vocab.isNotEmpty && !_contentPages.any((p) => p['type'] == 'quiz')) {
+                _contentPages.add({'type': 'quiz', 'vocabulary': vocab, 'prevPageIndex': i - 1});
+              }
             }
           }
 
@@ -172,7 +182,7 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
               final page = _contentPages[index];
               return page['type'] == 'story'
                   ? _buildStoryPage(page['content'], index)
-                  : _buildQuizPage(page['vocabulary'], index);
+                  : _buildQuizPage(page['vocabulary'], index, page['prevPageIndex']);
             },
           );
         },
@@ -195,10 +205,11 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                 height: MediaQuery.of(context).size.height * 0.65,
                 width: double.infinity,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
+                errorBuilder: (context, error, stackTrace) => Image.asset(
+                  'assets/cinderella.png', // Fallback image
                   height: MediaQuery.of(context).size.height * 0.65,
-                  color: Colors.grey[300],
-                  child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                  width: double.infinity,
+                  fit: BoxFit.cover,
                 ),
               ),
               Positioned(
@@ -282,7 +293,7 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
     );
   }
 
-  Widget _buildQuizPage(List<Vocabulary> pageVocab, int index) {
+  Widget _buildQuizPage(List<Vocabulary> pageVocab, int index, int prevPageIndex) {
     final totalPages = _contentPages.length;
     final currentPage = index + 1;
 
@@ -291,8 +302,14 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
         QuizPage(
           vocabulary: pageVocab,
           onComplete: () {
-            // Optionally handle what happens after quiz completion
-            Navigator.pop(context); // Example: Navigate back after quiz
+            if (_currentPageIndex == _contentPages.length - 1) {
+              _showAchievementDialog();
+            } else {
+              _pageController.nextPage(
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeInOut,
+              );
+            }
           },
         ),
         Positioned(
@@ -319,10 +336,10 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
     );
   }
 
-  List<Vocabulary> _extractVocabulary(List<Vocabulary> allVocab) {
-    // Extract all vocabulary words present in the entire story content
-    final storyContent = _storyPages.join(' ').toLowerCase();
-    return allVocab.where((v) => storyContent.contains(v.word.toLowerCase())).toList();
+  List<Vocabulary> _extractVocabularyFromPage(List<Vocabulary> allVocab, int pageIndex) {
+    if (pageIndex >= _storyPages.length) return [];
+    final pageContent = _storyPages[pageIndex].toLowerCase();
+    return allVocab.where((v) => pageContent.contains(v.word.toLowerCase())).toList();
   }
 
   void _handlePageChange(int index) async {
@@ -495,13 +512,109 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
     );
   }
 
+  void _showVoiceDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Select Voice',
+          style: TextStyle(fontSize: 26, fontFamily: 'ComicNeue', color: Colors.blueAccent),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: const Text('Female', style: TextStyle(fontFamily: 'ComicNeue')),
+              onTap: () {
+                _setVoiceGender('female');
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              title: const Text('Male', style: TextStyle(fontFamily: 'ComicNeue')),
+              onTap: () {
+                _setVoiceGender('male');
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _setLanguage(String lang) async {
     await _flutterTts.setLanguage(lang);
     setState(() {
       _currentVoice = lang;
     });
-    await _flutterTts.setVoice({"name": _voices.first['name'], "locale": _currentVoice});
+    await _setVoiceGender(_selectedGender);
     Navigator.pop(context);
+  }
+
+  Future<void> _setVoiceGender(String gender) async {
+    _selectedGender = gender;
+    final voices = _voices.where((v) => v['locale'] == _currentVoice).toList();
+    final genderVoices = gender == 'female'
+        ? voices.where((v) => v['name']?.toLowerCase().contains('female') ?? false).toList()
+        : voices.where((v) => v['name']?.toLowerCase().contains('male') ?? false).toList();
+    final selectedVoice = genderVoices.isNotEmpty ? genderVoices.first : voices.isNotEmpty ? voices.first : null;
+    if (selectedVoice != null) {
+      await _flutterTts.setVoice({"name": selectedVoice['name'], "locale": _currentVoice});
+    }
+  }
+
+  void _showAchievementDialog() {
+    final totalVocab = _extractVocabularyFromAllPages(context.read<StorytellingBloc>().state).length;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Achievement Unlocked!',
+          style: TextStyle(fontSize: 26, fontFamily: 'ComicNeue', color: Colors.blueAccent),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'You answered $_correctAnswers out of $totalVocab vocabulary words correctly!',
+              style: const TextStyle(fontSize: 18, fontFamily: 'ComicNeue'),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            Image.asset(
+              'assets/trophy.png', // Replace with your trophy image asset
+              height: 100,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context); // Navigate back to previous screen
+            },
+            child: const Text(
+              'Done',
+              style: TextStyle(fontSize: 20, fontFamily: 'ComicNeue', color: Colors.blueAccent),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Vocabulary> _extractVocabularyFromAllPages(StorytellingState state) {
+    if (state is VocabularyLoaded) {
+      final storyContent = _storyPages.join(' ').toLowerCase();
+      return state.vocabulary.where((v) => storyContent.contains(v.word.toLowerCase())).toList();
+    }
+    return [];
   }
 
   @override

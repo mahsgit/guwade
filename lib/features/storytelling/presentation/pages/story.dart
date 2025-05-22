@@ -1,7 +1,10 @@
+import 'package:buddy/features/stem/presentation/pages/stem_content.dart';
+import 'package:buddy/features/stem/presentation/pages/stem_detail_page.dart';
 import 'package:buddy/features/storytelling/presentation/pages/story_detail.dart';
 import 'package:buddy/features/storytelling/presentation/widgets/story_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../bloc/storytelling_bloc.dart';
 
 /// StorySelectionPage displays a list of stories and categories.
@@ -13,7 +16,8 @@ class StorySelectionPage extends StatefulWidget {
   State<StorySelectionPage> createState() => _StorySelectionPageState();
 }
 
-class _StorySelectionPageState extends State<StorySelectionPage> with AutomaticKeepAliveClientMixin {
+class _StorySelectionPageState extends State<StorySelectionPage>
+    with AutomaticKeepAliveClientMixin {
   int _selectedTabIndex = 0;
   final List<String> _tabs = ['Story', 'STEM'];
   bool _isLoading = false;
@@ -25,7 +29,6 @@ class _StorySelectionPageState extends State<StorySelectionPage> with AutomaticK
   @override
   void initState() {
     super.initState();
-    // Only load stories if they haven't been loaded yet
     if (!_initialLoadDone) {
       _loadStories();
     }
@@ -35,8 +38,7 @@ class _StorySelectionPageState extends State<StorySelectionPage> with AutomaticK
     setState(() {
       _isLoading = true;
     });
-    
-    // Check if stories are already loaded
+
     final currentState = context.read<StorytellingBloc>().state;
     if (currentState is StoriesLoaded && currentState.stories.isNotEmpty) {
       setState(() {
@@ -45,11 +47,9 @@ class _StorySelectionPageState extends State<StorySelectionPage> with AutomaticK
       });
       return;
     }
-    
-    // Dispatch the LoadStories event
+
     context.read<StorytellingBloc>().add(LoadStories());
-    
-    // Set a fallback timer in case the bloc doesn't respond
+
     Future.delayed(const Duration(seconds: 10), () {
       if (mounted && _isLoading) {
         setState(() {
@@ -61,8 +61,8 @@ class _StorySelectionPageState extends State<StorySelectionPage> with AutomaticK
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // Required for AutomaticKeepAliveClientMixin
-    
+    super.build(context);
+
     return Scaffold(
       backgroundColor: Colors.yellow[50],
       appBar: AppBar(
@@ -73,7 +73,6 @@ class _StorySelectionPageState extends State<StorySelectionPage> with AutomaticK
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
-          // Add a refresh button
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.black),
             onPressed: _loadStories,
@@ -97,7 +96,6 @@ class _StorySelectionPageState extends State<StorySelectionPage> with AutomaticK
     );
   }
 
-  // Header with illustration
   Widget _buildHeader() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -116,7 +114,8 @@ class _StorySelectionPageState extends State<StorySelectionPage> with AutomaticK
             return Container(
               color: Colors.grey[300],
               child: const Center(
-                child: Icon(Icons.image_not_supported, size: 48, color: Colors.grey),
+                child: Icon(Icons.image_not_supported,
+                    size: 48, color: Colors.grey),
               ),
             );
           },
@@ -125,7 +124,6 @@ class _StorySelectionPageState extends State<StorySelectionPage> with AutomaticK
     );
   }
 
-  // Tab selector (Story, STEM)
   Widget _buildTabSelector() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -168,62 +166,468 @@ class _StorySelectionPageState extends State<StorySelectionPage> with AutomaticK
     );
   }
 
-  // STEM section - Coming soon message
   Widget _buildStemSection() {
+    final List<Map<String, dynamic>> _categories = [
+      {
+        'id': 'math',
+        'title': 'Mathematics',
+        'description': 'Fun math concepts for young minds',
+        'color': Colors.blue[700]!,
+        'icon': Icons.calculate,
+        'playlistUrl':
+            'https://www.youtube.com/watch?v=a4FXl4zb3E4&list=PLWphMREEQDrgzJPYI_t-DNVb3FjVsMs-K',
+        'isAvailable': true,
+      },
+      {
+        'id': 'engineering',
+        'title': 'Engineering',
+        'description': 'Build and create amazing things',
+        'color': Colors.orange[700]!,
+        'icon': Icons.construction,
+        'playlistUrl':
+            'https://www.youtube.com/watch?v=Ra7Bax6rGoQ&list=RDRa7Bax6rGoQ&start_radio=1',
+        'isAvailable': true,
+      },
+      {
+        'id': 'science',
+        'title': 'Science',
+        'description': 'Discover how the world works',
+        'color': Colors.green[700]!,
+        'icon': Icons.science,
+        'playlistUrl': '',
+        'isAvailable': false,
+      },
+      {
+        'id': 'technology',
+        'title': 'Technology',
+        'description': 'Explore amazing gadgets and computers',
+        'color': Colors.purple[700]!,
+        'icon': Icons.computer,
+        'playlistUrl': '',
+        'isAvailable': false,
+      },
+      {
+        'id': 'diy',
+        'title': 'DIY Projects',
+        'description': 'Make your own cool creations',
+        'color': Colors.red[700]!,
+        'icon': Icons.build,
+        'playlistUrl': '',
+        'isAvailable': false,
+      }
+    ];
+
+    return FutureBuilder<Map<String, double>>(
+      future: _loadCategoriesProgress(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.teal),
+            ),
+          );
+        }
+
+        final progressMap = snapshot.data ?? {};
+        for (var category in _categories) {
+          category['progress'] = progressMap[category['id']] ?? 0.0;
+        }
+
+        return Container(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                margin: const EdgeInsets.all(16),
+                height: 180,
+                decoration: BoxDecoration(
+                  color: Colors.teal[100],
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: Image.asset(
+                          'assets/stem_header.png',
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: Colors.teal[200],
+                              child: Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.science,
+                                      size: 64,
+                                      color: Colors.teal[700],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      "STEM Learning",
+                                      style: TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.teal[800],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 8, horizontal: 16),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                              colors: [
+                                Colors.black.withOpacity(0.7),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                          child: const Text(
+                            "Explore STEM Subjects",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.lightbulb,
+                          color: Colors.amber[700],
+                          size: 24,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          "What is STEM?",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      "STEM stands for Science, Technology, Engineering, and Mathematics. These fun activities help kids learn important skills through play and exploration!",
+                      style: TextStyle(
+                        fontSize: 14,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        _buildInfoChip(Icons.star, "Ages 4-8"),
+                        const SizedBox(width: 8),
+                        _buildInfoChip(Icons.school, "Kid-friendly"),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "STEM Categories",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: 0.8,
+                      ),
+                      itemCount: _categories.length,
+                      itemBuilder: (context, index) {
+                        final category = _categories[index];
+                        return _buildCategoryCard(category, context);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<Map<String, double>> _loadCategoriesProgress() async {
+    final prefs = await SharedPreferences.getInstance();
+    final progressMap = <String, double>{};
+    for (var category in ['math', 'engineering', 'science', 'technology', 'diy']) {
+      progressMap[category] = prefs.getDouble('${category}_progress') ?? 0.0;
+    }
+    return progressMap;
+  }
+
+  Widget _buildInfoChip(IconData icon, String label) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.teal[100],
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.teal[300]!, width: 2),
+        color: Colors.teal[50],
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.teal[200]!),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.science,
-            size: 64,
+            icon,
+            size: 16,
             color: Colors.teal[700],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(width: 4),
           Text(
-            "STEM Contest Coming Soon!",
+            label,
             style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+              fontSize: 12,
               color: Colors.teal[700],
+              fontWeight: FontWeight.w500,
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            "We're preparing exciting STEM challenges for you. Stay tuned!",
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.teal[700],
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.teal[200],
-              foregroundColor: Colors.teal[800],
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text("Notify Me When Available"),
           ),
         ],
       ),
     );
   }
 
-  // Read a story section
+  Widget _buildCategoryCard(Map<String, dynamic> category, BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        if (category['isAvailable']) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => StemDetailPage(
+                category: StemCategory(
+                  id: category['id'],
+                  title: category['title'],
+                  color: category['color'],
+                  playlistUrl: category['playlistUrl'],
+                ),
+              ),
+            ),
+          ).then((_) => setState(() {})); // Refresh progress on return
+        } else {
+          _showComingSoonDialog(context, category['title']);
+        }
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              height: 100,
+              decoration: BoxDecoration(
+                color: category['color'].withOpacity(0.8),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                ),
+              ),
+              child: Center(
+                child: Icon(
+                  category['icon'],
+                  size: 48,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            category['title'],
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (!category['isAvailable'])
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.amber[100],
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              "Soon",
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.amber[800],
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      category['description'],
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const Spacer(),
+                    if (category['isAvailable']) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: LinearProgressIndicator(
+                                value: category['progress'],
+                                backgroundColor: Colors.grey[200],
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  category['color'],
+                                ),
+                                minHeight: 6,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            "${(category['progress'] * 100).toInt()}%",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showComingSoonDialog(BuildContext context, String categoryTitle) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(
+          "$categoryTitle Coming Soon!",
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.upcoming,
+              size: 64,
+              color: Colors.amber[700],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              "We're preparing exciting $categoryTitle videos for you. Stay tuned!",
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildReadStorySection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -242,7 +646,6 @@ class _StorySelectionPageState extends State<StorySelectionPage> with AutomaticK
           height: 220,
           child: BlocConsumer<StorytellingBloc, StorytellingState>(
             listener: (context, state) {
-              // Update loading state based on bloc state
               if (state is StoriesLoading) {
                 setState(() {
                   _isLoading = true;
@@ -255,18 +658,15 @@ class _StorySelectionPageState extends State<StorySelectionPage> with AutomaticK
               }
             },
             builder: (context, state) {
-              // Show loading indicator
-              if (state is StoriesLoading || (_isLoading && !_initialLoadDone)) {
+              if (state is StoriesLoading ||
+                  (_isLoading && !_initialLoadDone)) {
                 return _buildLoadingIndicator();
-              }
-              
-              // Show loaded stories
-              else if (state is StoriesLoaded) {
+              } else if (state is StoriesLoaded) {
                 final stories = state.stories;
                 if (stories.isEmpty) {
                   return _buildNoStoriesMessage();
                 }
-                
+
                 return ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -276,7 +676,6 @@ class _StorySelectionPageState extends State<StorySelectionPage> with AutomaticK
                     return StoryCard(
                       story: story,
                       onTap: () {
-                        // Navigate to story detail page with all required parameters
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -284,25 +683,20 @@ class _StorySelectionPageState extends State<StorySelectionPage> with AutomaticK
                               storyId: story.id,
                               title: story.title,
                               imageUrl: story.imageUrl ?? '',
-                              content: story.storyBody ?? 'No content available',
+                              content:
+                                  story.storyBody ?? 'No content available',
                             ),
                           ),
                         ).then((_) {
-                          // This ensures the state is refreshed when returning
                           setState(() {});
                         });
                       },
                     );
                   },
                 );
-              }
-              
-              // Show error message
-              else if (state is StoriesError) {
+              } else if (state is StoriesError) {
                 return _buildErrorMessage(state.message);
               }
-              
-              // Show fallback content with sample data
               return _buildFallbackContent();
             },
           ),
@@ -311,7 +705,6 @@ class _StorySelectionPageState extends State<StorySelectionPage> with AutomaticK
     );
   }
 
-  // Loading indicator
   Widget _buildLoadingIndicator() {
     return Center(
       child: Column(
@@ -333,7 +726,6 @@ class _StorySelectionPageState extends State<StorySelectionPage> with AutomaticK
     );
   }
 
-  // Error message
   Widget _buildErrorMessage(String message) {
     return Center(
       child: Column(
@@ -368,7 +760,6 @@ class _StorySelectionPageState extends State<StorySelectionPage> with AutomaticK
     );
   }
 
-  // No stories message
   Widget _buildNoStoriesMessage() {
     return Center(
       child: Column(
@@ -402,7 +793,6 @@ class _StorySelectionPageState extends State<StorySelectionPage> with AutomaticK
     );
   }
 
-  // Fallback content with sample data
   Widget _buildFallbackContent() {
     return ListView(
       scrollDirection: Axis.horizontal,
@@ -418,7 +808,8 @@ class _StorySelectionPageState extends State<StorySelectionPage> with AutomaticK
                 storyId: '1',
                 title: 'Fairy Tale Story',
                 imageUrl: 'assets/fairy_tale.png',
-                content: 'Once upon a time, there was a beautiful princess who lived in a castle. '
+                content:
+                    'Once upon a time, there was a beautiful princess who lived in a castle. '
                     'She was known throughout the kingdom for her kindness and wisdom. '
                     'One day, a mysterious bird with golden feathers appeared at her window.',
               ),
@@ -435,7 +826,8 @@ class _StorySelectionPageState extends State<StorySelectionPage> with AutomaticK
                 storyId: '2',
                 title: 'Queen of Bird',
                 imageUrl: 'assets/queen_bird.png',
-                content: 'In a magical forest, there lived a magnificent bird with feathers of gold and blue. '
+                content:
+                    'In a magical forest, there lived a magnificent bird with feathers of gold and blue. '
                     'This was no ordinary bird, but the queen of all birds, who could speak the language of humans. '
                     'She watched over the forest and all its creatures with wisdom and care.',
               ),
@@ -446,7 +838,6 @@ class _StorySelectionPageState extends State<StorySelectionPage> with AutomaticK
     );
   }
 
-  // Categories section
   Widget _buildCategoriesSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -473,7 +864,8 @@ class _StorySelectionPageState extends State<StorySelectionPage> with AutomaticK
                 subtitle: "100 Stories",
                 color: Colors.indigo[900]!,
                 imageUrl: 'assets/comic.png',
-                onTap: () => _showCategoryComingSoon(context, "Children's Comic"),
+                onTap: () =>
+                    _showCategoryComingSoon(context, "Children's Comic"),
               ),
               _CategoryItem(
                 title: "Adventure",
@@ -495,8 +887,7 @@ class _StorySelectionPageState extends State<StorySelectionPage> with AutomaticK
       ],
     );
   }
-  
-  // Show category coming soon dialog
+
   void _showCategoryComingSoon(BuildContext context, String category) {
     showDialog(
       context: context,
@@ -536,7 +927,6 @@ class _StorySelectionPageState extends State<StorySelectionPage> with AutomaticK
   }
 }
 
-/// Story card widget for displaying a single story.
 class _StoryCard extends StatelessWidget {
   final String title;
   final String? imageUrl;
@@ -569,12 +959,12 @@ class _StoryCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Story image - Using Container with DecorationImage
             Container(
               height: 150,
               width: double.infinity,
               decoration: BoxDecoration(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(16)),
                 image: imageUrl != null && imageUrl!.isNotEmpty
                     ? DecorationImage(
                         image: AssetImage(imageUrl!),
@@ -583,17 +973,16 @@ class _StoryCard extends StatelessWidget {
                     : null,
                 color: Colors.grey[300],
               ),
-              // Show placeholder icon only if no image URL is provided
               child: imageUrl == null || imageUrl!.isEmpty
                   ? const Icon(Icons.image, size: 48, color: Colors.grey)
                   : null,
             ),
-            // Story title with background for better readability
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: const BoxDecoration(
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+                borderRadius:
+                    BorderRadius.vertical(bottom: Radius.circular(16)),
               ),
               child: Text(
                 title,
@@ -612,7 +1001,6 @@ class _StoryCard extends StatelessWidget {
   }
 }
 
-/// Category item widget for displaying a category.
 class _CategoryItem extends StatelessWidget {
   final String title;
   final String subtitle;
@@ -641,7 +1029,6 @@ class _CategoryItem extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            // Category content
             Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
@@ -668,7 +1055,6 @@ class _CategoryItem extends StatelessWidget {
                 ],
               ),
             ),
-            // Category image - Using Container with DecorationImage
             Positioned(
               right: -10,
               bottom: -10,

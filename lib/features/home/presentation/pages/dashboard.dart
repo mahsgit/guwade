@@ -33,7 +33,7 @@ class _DashboardPageState extends State<DashboardPage> {
           } else if (state is ProfileLoaded) {
             final user = state.user;
             final birthDate = user.birthDate;
-            final currentDate = DateTime.now(); // 01:28 AM EAT, May 22, 2025
+            final currentDate = DateTime.now();
             final age = currentDate.year - birthDate.year;
             final ageDisplay = birthDate.month > currentDate.month ||
                     (birthDate.month == currentDate.month && birthDate.day > currentDate.day)
@@ -56,45 +56,95 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     ),
                   ),
-                  // User info row
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Gems and rank
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Row(
-                              children: [
-                                Icon(Icons.diamond, color: Colors.blue, size: 20),
-                                SizedBox(width: 4),
-                                Text('26',
-                                    style: TextStyle(fontWeight: FontWeight.bold)),
-                              ],
-                            ),
-                            SizedBox(height: 2),
-                            Text('Rank: 4',
-                                style: TextStyle(fontSize: 12, color: Colors.black54)),
-                          ],
-                        ),
-                        // User greeting with dynamic nickname and age
-                        Row(
-                          children: [
-                            Text('👋Hi, ${user.nickname}\n$ageDisplay Years old',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w500, fontSize: 14)),
-                            const SizedBox(width: 8),
-                            // Avatar
-                            CircleAvatar(
-                              radius: 18,
-                              backgroundColor: Colors.orange[100],
-                              child: const Icon(Icons.person, color: Colors.brown),
-                            ),
-                          ],
-                        ),
-                      ],
+                  // User info row - ENHANCED PROFILE SECTION
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushNamed(context, '/profile');
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange[50],
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.orange.withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Gems and rank
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Row(
+                                children: [
+                                  Icon(Icons.diamond, color: Colors.blue, size: 20),
+                                  SizedBox(width: 4),
+                                  Text('26',
+                                      style: TextStyle(fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                              SizedBox(height: 2),
+                              Text('Rank: 4',
+                                  style: TextStyle(fontSize: 12, color: Colors.black54)),
+                            ],
+                          ),
+                          // User greeting with dynamic nickname and age
+                          Row(
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text('👋 Hi, ${user.nickname}',
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w500, fontSize: 16)),
+                                  Text('$ageDisplay Years old',
+                                      style: const TextStyle(fontSize: 14, color: Colors.black54)),
+                                  const SizedBox(height: 4),
+                                  const Text('Tap to view profile',
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.blue,
+                                          fontWeight: FontWeight.w500)),
+                                ],
+                              ),
+                              const SizedBox(width: 12),
+                              // Avatar - Made bigger
+                              Stack(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 28,
+                                    backgroundColor: Colors.orange[100],
+                                    child: const Icon(Icons.person, color: Colors.brown, size: 32),
+                                  ),
+                                  Positioned(
+                                    right: 0,
+                                    bottom: 0,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.blue,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.arrow_forward,
+                                        color: Colors.white,
+                                        size: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -120,11 +170,12 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Story and Vocabulary cards
+                  // Story, Vocabulary, and Emotion cards
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
                       children: [
                         _DashboardCard(
                           image: 'assets/cinderella.png',
@@ -140,6 +191,13 @@ class _DashboardPageState extends State<DashboardPage> {
                             Navigator.pushNamed(context, '/vocabulary');
                           },
                         ),
+                        // _DashboardCard(
+                        //   image: 'assets/emotion.png', // Add an emotion icon/image
+                        //   label: 'Emotion Detection',
+                        //   onTap: () {
+                        //     Navigator.pushNamed(context, '/emotion');
+                        //   },
+                        // ),
                       ],
                     ),
                   ),
@@ -170,7 +228,8 @@ class _DashboardCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
+    return SizedBox(
+      width: (MediaQuery.of(context).size.width - 60) / 3, // Adjust for 3 cards
       child: GestureDetector(
         onTap: onTap,
         child: Container(
