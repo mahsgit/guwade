@@ -1,5 +1,6 @@
 import 'package:buddy/features/stem/presentation/pages/stem_content.dart';
 import 'package:buddy/features/stem/presentation/pages/stem_detail_page.dart';
+import 'package:buddy/features/storytelling/domain/entities/story.dart';
 import 'package:buddy/features/storytelling/presentation/pages/story_detail.dart';
 import 'package:buddy/features/storytelling/presentation/widgets/story_card.dart';
 import 'package:flutter/material.dart';
@@ -680,11 +681,8 @@ class _StorySelectionPageState extends State<StorySelectionPage>
                           context,
                           MaterialPageRoute(
                             builder: (context) => StoryDetailPage(
-                              storyId: story.id,
-                              title: story.title,
-                              imageUrl: story.imageUrl ?? '',
-                              content:
-                                  story.storyBody ?? 'No content available',
+                              story: story,
+                           
                             ),
                           ),
                         ).then((_) {
@@ -804,14 +802,16 @@ class _StorySelectionPageState extends State<StorySelectionPage>
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const StoryDetailPage(
-                storyId: '1',
-                title: 'Fairy Tale Story',
-                imageUrl: 'assets/fairy_tale.png',
-                content:
-                    'Once upon a time, there was a beautiful princess who lived in a castle. '
-                    'She was known throughout the kingdom for her kindness and wisdom. '
-                    'One day, a mysterious bird with golden feathers appeared at her window.',
+              builder: (context) => StoryDetailPage(
+                story: Story(
+                  id: '1',
+                  title: 'Fairy Tale Story',
+                  imageUrl: 'assets/fairy_tale.png',
+                  storyBody:
+                      'Once upon a time, there was a beautiful princess who lived in a castle. '
+                      'She was known throughout the kingdom for her kindness and wisdom. '
+                      'One day, a mysterious bird with golden feathers appeared at her window.',
+                ),
               ),
             ),
           ),
@@ -822,14 +822,16 @@ class _StorySelectionPageState extends State<StorySelectionPage>
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const StoryDetailPage(
-                storyId: '2',
-                title: 'Queen of Bird',
-                imageUrl: 'assets/queen_bird.png',
-                content:
-                    'In a magical forest, there lived a magnificent bird with feathers of gold and blue. '
-                    'This was no ordinary bird, but the queen of all birds, who could speak the language of humans. '
-                    'She watched over the forest and all its creatures with wisdom and care.',
+              builder: (context) => StoryDetailPage(
+                story: Story(
+                  id: '2',
+                  title: 'Queen of Bird',
+                  imageUrl: 'assets/queen_bird.png',
+                  storyBody:
+                      'In a magical forest, there lived a magnificent bird with feathers of gold and blue. '
+                      'This was no ordinary bird, but the queen of all birds, who could speak the language of humans. '
+                      'She watched over the forest and all its creatures with wisdom and care.',
+                ),
               ),
             ),
           ),
@@ -1081,3 +1083,5 @@ class _CategoryItem extends StatelessWidget {
     );
   }
 }
+
+

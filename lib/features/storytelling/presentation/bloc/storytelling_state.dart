@@ -50,3 +50,48 @@ class VocabularyError extends StorytellingState {
   @override
   List<Object> get props => [message];
 }
+
+
+
+
+
+class EmotionLoading extends StorytellingState {}
+
+class EmotionDetected extends StorytellingState {
+  final String emotion;
+  final String storyId;
+
+  const EmotionDetected({required this.emotion, required this.storyId});
+
+  @override
+  List<Object?> get props => [emotion, storyId];
+}
+
+class EmotionError extends StorytellingState {
+  final String message;
+
+  const EmotionError(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}
+
+class StoryChangeLoading extends StorytellingState {}
+
+class StoryUpdated extends StorytellingState {
+  final Story story;
+
+  const StoryUpdated({required this.story});
+
+  @override
+  List<Object?> get props => [story];
+}
+
+class StoryChangeError extends StorytellingState {
+  final String message;
+
+  const StoryChangeError(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}

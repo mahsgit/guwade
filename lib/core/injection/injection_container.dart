@@ -1,6 +1,8 @@
 import 'package:buddy/features/auth/data/datasources/auth_local_datasource.dart';
 import 'package:buddy/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:buddy/features/storytelling/data/datasources/story_local_data_source.dart';
+import 'package:buddy/features/storytelling/domain/usecases/emotion.dart';
+import 'package:buddy/features/storytelling/domain/usecases/story_change.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:internet_connection_checker/internet_connection_checker.dart';
@@ -85,6 +87,7 @@ Future<void> init() async {
       client: sl(),
       authLocalDataSource: sl(),
       storyLocalDataSource: sl(),
+
     ),
   );
 
@@ -95,6 +98,7 @@ Future<void> init() async {
       networkInfo: sl(),
       authLocalDataSource: sl(),
       localDataSource: sl(),
+      
   )
   );
 
@@ -108,6 +112,8 @@ Future<void> init() async {
   // Storytelling Use cases
   sl.registerLazySingleton(() => GetStoriesUseCase(sl()));
   sl.registerLazySingleton(() => GetVocabularyUseCase(sl()));
+  sl.registerLazySingleton(() => DetectEmotionusecase(sl()));
+  sl.registerLazySingleton(() => ChangeStoryusecase(sl()));
 
 
   // Storytelling Blocs
@@ -115,6 +121,8 @@ Future<void> init() async {
     () => StorytellingBloc(
       getStoriesUseCase: sl(),
       getVocabularyUseCase: sl(),
+      detectEmotion: sl(),
+      changeStory: sl(),
     ),
   );
 

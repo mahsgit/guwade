@@ -1,22 +1,23 @@
+import 'dart:async';
 import 'package:buddy/features/quiz/presentation/pages/quiz_page.dart';
+import 'package:buddy/features/storytelling/data/models/story_model.dart';
+import 'package:buddy/features/storytelling/domain/entities/story.dart';
 import 'package:buddy/features/storytelling/domain/entities/vocabulary.dart';
 import 'package:buddy/features/storytelling/presentation/bloc/storytelling_bloc.dart';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:path/path.dart' as path;
 
 class StoryDetailPage extends StatefulWidget {
-  final String storyId;
-  final String title;
-  final String imageUrl;
-  final String content;
+  final Story story;
 
   const StoryDetailPage({
     super.key,
-    required this.storyId,
-    required this.title,
-    required this.imageUrl,
-    required this.content,
+    required this.story,
   });
 
   @override
@@ -31,38 +32,43 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
   double _speechRate = 0.4;
   String _currentVoice = 'en-US';
   List<Map<String, dynamic>> _voices = [];
-  String _selectedGender = 'female'; // Default to female voice
+  String _selectedGender = 'female';
+  CameraController? _cameraController;
+  List<CameraDescription>? cameras;
+  bool _isCapturing = false;
+  String _emotion = "Detecting...";
+  Timer? _emotionTimer;
 
   List<String> _storyPages = [];
   List<Map<String, dynamic>> _contentPages = [];
   int _currentPageIndex = 0;
-  int _correctAnswers = 0; // Track correct answers for achievement
+  int _correctAnswers = 0;
+  late Story _currentStory;
 
   String _currentWord = "";
   List<String> _currentPageWords = [];
   int _currentWordIndex = -1;
-
   double _fontSize = 24.0;
   final PageController _pageController = PageController();
 
   @override
   void initState() {
     super.initState();
+    _currentStory = widget.story;
     _initTts();
+    _initCamera();
     _processStoryContent();
     context.read<StorytellingBloc>().add(LoadVocabulary());
+    _startEmotionCapture();
   }
 
   Future<void> _initTts() async {
     _flutterTts = FlutterTts();
-
     try {
       final voices = await _flutterTts.getVoices;
       _voices = (voices ?? [])
           .where((v) => v['locale'].startsWith('en') || v['locale'].startsWith('es'))
           .toList();
-
-      // Filter for male and female voices based on name hints
       final femaleVoices = _voices.where((v) => v['name']?.toLowerCase().contains('female') ?? false).toList();
       final maleVoices = _voices.where((v) => v['name']?.toLowerCase().contains('male') ?? false).toList();
       final availableVoices = femaleVoices.isNotEmpty ? femaleVoices : maleVoices.isNotEmpty ? maleVoices : _voices;
@@ -95,12 +101,60 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
     setState(() => _isTtsInitialized = true);
   }
 
+  Future<void> _initCamera() async {
+    cameras = await availableCameras();
+    if (cameras == null || cameras!.isEmpty) {
+      print("No cameras found");
+      setState(() => _emotion = "No Camera");
+      return;
+    }
+    _cameraController = CameraController(cameras!.first, ResolutionPreset.low);
+    await _cameraController!.initialize();
+    if (mounted) setState(() {});
+  }
+
+  void _startEmotionCapture() {
+    _emotionTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+      if (!_isCapturing && _cameraController != null && _cameraController!.value.isInitialized) {
+        await _captureAndSendFrames();
+      }
+    });
+  }
+
+  Future<void> _captureAndSendFrames() async {
+    if (_cameraController == null || !_cameraController!.value.isInitialized) return;
+
+    setState(() {
+      _isCapturing = true;
+      _emotion = "Capturing...";
+    });
+
+    final List<XFile> capturedFrames = [];
+
+    try {
+      for (int i = 0; i < 15; i++) {
+        XFile file = await _cameraController!.takePicture();
+        capturedFrames.add(file);
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+
+      final bytesList = await Future.wait(capturedFrames.map((file) => file.readAsBytes()));
+      context.read<StorytellingBloc>().add(DetectEmotion(frames: bytesList, storyId: _currentStory.id));
+    } catch (e) {
+      setState(() {
+        _emotion = "Error: $e";
+      });
+    } finally {
+      setState(() => _isCapturing = false);
+    }
+  }
+
   int _findWordIndex(String word) {
     return _currentPageWords.indexWhere((w) => w.toLowerCase() == word.toLowerCase());
   }
 
   void _processStoryContent() {
-    final sentences = widget.content.split(RegExp(r'(?<=[.!?])\s+'));
+    final sentences = _currentStory.storyBody.split(RegExp(r'(?<=[.!?])\s+'));
     _storyPages = [];
 
     String currentPage = '';
@@ -161,7 +215,18 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
           ),
         ],
       ),
-      body: BlocBuilder<StorytellingBloc, StorytellingState>(
+      body: BlocConsumer<StorytellingBloc, StorytellingState>(
+        listener: (context, state) {
+          if (state is EmotionDetected && state.emotion == 'sad') {
+            _showBoredDialog();
+          } else if (state is StoryUpdated) {
+            setState(() {
+              _currentStory = state.story;
+              _currentPageIndex = 0;
+              _processStoryContent();
+            });
+          }
+        },
         builder: (context, state) {
           if (state is VocabularyLoaded) {
             _contentPages = [];
@@ -174,16 +239,47 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
             }
           }
 
-          return PageView.builder(
-            controller: _pageController,
-            itemCount: _contentPages.length,
-            onPageChanged: _handlePageChange,
-            itemBuilder: (context, index) {
-              final page = _contentPages[index];
-              return page['type'] == 'story'
-                  ? _buildStoryPage(page['content'], index)
-                  : _buildQuizPage(page['vocabulary'], index, page['prevPageIndex']);
-            },
+          return Stack(
+            children: [
+              PageView.builder(
+                controller: _pageController,
+                itemCount: _contentPages.length,
+                onPageChanged: _handlePageChange,
+                itemBuilder: (context, index) {
+                  final page = _contentPages[index];
+                  return page['type'] == 'story'
+                      ? _buildStoryPage(page['content'], index)
+                      : _buildQuizPage(page['vocabulary'], index, page['prevPageIndex']);
+                },
+              ),
+              Positioned(
+                top: 10,
+                left: 10,
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.8),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: _cameraController == null || !_cameraController!.value.isInitialized
+                      ? const Center(child: CircularProgressIndicator())
+                      : Column(
+                          children: [
+                            AspectRatio(
+                              aspectRatio: _cameraController!.value.aspectRatio,
+                              child: CameraPreview(_cameraController!),
+                            ),
+                            Text(
+                              _emotion,
+                              style: const TextStyle(color: Colors.white, fontSize: 12),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                ),
+              ),
+            ],
           );
         },
       ),
@@ -201,12 +297,12 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
           child: Stack(
             children: [
               Image.network(
-                widget.imageUrl,
+                _currentStory.imageUrl ?? 'https://example.com/placeholder.jpg',
                 height: MediaQuery.of(context).size.height * 0.65,
                 width: double.infinity,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => Image.asset(
-                  'assets/cinderella.png', // Fallback image
+                  'assets/cinderella.png',
                   height: MediaQuery.of(context).size.height * 0.65,
                   width: double.infinity,
                   fit: BoxFit.cover,
@@ -223,7 +319,7 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.title,
+                        _currentStory.title,
                         style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
@@ -364,9 +460,7 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-      decoration: const BoxDecoration(
-        color: Colors.black,
-      ),
+      decoration: const BoxDecoration(color: Colors.black),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
@@ -545,6 +639,43 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
     );
   }
 
+  void _showBoredDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Are you bored?',
+          style: TextStyle(fontSize: 26, fontFamily: 'ComicNeue', color: Colors.blueAccent),
+        ),
+        content: const Text(
+          'You seem sad. Would you like to switch to a new story?',
+          style: TextStyle(fontSize: 18, fontFamily: 'ComicNeue'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'No',
+              style: TextStyle(fontSize: 20, fontFamily: 'ComicNeue', color: Colors.blueAccent),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              context.read<StorytellingBloc>().add(ChangeStory(storyId: _currentStory.id));
+              Navigator.pop(context);
+            },
+            child: const Text(
+              'Yes',
+              style: TextStyle(fontSize: 20, fontFamily: 'ComicNeue', color: Colors.blueAccent),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _setLanguage(String lang) async {
     await _flutterTts.setLanguage(lang);
     setState(() {
@@ -588,7 +719,7 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
             ),
             const SizedBox(height: 20),
             Image.asset(
-              'assets/trophy.png', // Replace with your trophy image asset
+              'assets/trophy.png',
               height: 100,
             ),
           ],
@@ -597,7 +728,7 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pop(context); // Navigate back to previous screen
+              Navigator.pop(context);
             },
             child: const Text(
               'Done',
@@ -620,6 +751,8 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
   @override
   void dispose() {
     _flutterTts.stop();
+    _cameraController?.dispose();
+    _emotionTimer?.cancel();
     _pageController.dispose();
     super.dispose();
   }

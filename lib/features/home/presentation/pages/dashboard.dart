@@ -1,20 +1,41 @@
 import 'package:buddy/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class DashboardPage extends StatefulWidget {
-  const DashboardPage({super.key});
+  final List<CameraDescription> cameras; // Added to receive cameras
+  const DashboardPage({super.key, required this.cameras});
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+  String _currentEmotion = 'None'; // Track the current emotion
+  Map<String, int> _emotionCounts = {
+    'Angry': 0,
+    'Disgust': 0,
+    'Fear': 0,
+    'Happy': 0,
+    'Sad': 0,
+    'Surprise': 0,
+    'Neutral': 0,
+  }; // Track emotion counts
+
   @override
   void initState() {
     super.initState();
     // Trigger profile fetch on page load
     context.read<AuthBloc>().add(GetProfileRequested());
+  }
+
+  // Callback to update emotion and counts
+  void _updateEmotion(String emotion) {
+    setState(() {
+      _currentEmotion = emotion;
+      _emotionCounts[emotion] = (_emotionCounts[emotion] ?? 0) + 1;
+    });
   }
 
   @override
@@ -191,14 +212,54 @@ class _DashboardPageState extends State<DashboardPage> {
                             Navigator.pushNamed(context, '/vocabulary');
                           },
                         ),
-                        // _DashboardCard(
-                        //   image: 'assets/emotion.png', // Add an emotion icon/image
-                        //   label: 'Emotion Detection',
-                        //   onTap: () {
-                        //     Navigator.pushNamed(context, '/emotion');
-                        //   },
-                        // ),
+                        _DashboardCard(
+                          image: 'assets/emotion.png',
+                          label: 'Emotion Detection',
+                          subtitle: 'Current Emotion: $_currentEmotion', // Added subtitle
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context,
+                              '/emotion',
+                              arguments: {
+                                'onEmotionDetected': _updateEmotion, // Pass callback
+                              },
+                            );
+                          },
+                        ),
                       ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Emotion Counts Section
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Emotion Counts',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: _emotionCounts.entries.map((entry) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.blue[50],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '${entry.key}: ${entry.value}',
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -218,11 +279,13 @@ class _DashboardPageState extends State<DashboardPage> {
 class _DashboardCard extends StatelessWidget {
   final String image;
   final String label;
+  final String? subtitle; // Added subtitle for emotion display
   final VoidCallback onTap;
 
   const _DashboardCard({
     required this.image,
     required this.label,
+    this.subtitle,
     required this.onTap,
   });
 
@@ -261,6 +324,13 @@ class _DashboardCard extends StatelessWidget {
                 label,
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
+              if (subtitle != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  subtitle!,
+                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                ),
+              ],
               const SizedBox(height: 12),
             ],
           ),

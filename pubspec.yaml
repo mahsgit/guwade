@@ -61,9 +61,6 @@ flutter:
     - assets/comic.png
     - assets/adventure.png
     - assets/fantasy.png
-    - assets/emotion_model.tflite
     
 
    
-    # - assets/stories/fairy_tale.png
-    # - assets/stories/queen_birds.png
