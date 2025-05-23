@@ -39,7 +39,6 @@ class AppBottomNavigation extends StatelessWidget {
           animationCurve: Curves.easeOutCubic,
           animationDuration: const Duration(milliseconds: 600),
           items: [
-            
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [

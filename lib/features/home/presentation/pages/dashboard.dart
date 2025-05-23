@@ -10,6 +10,8 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+  int _selectedIndex = 0;
+
   @override
   void initState() {
     super.initState();
@@ -17,204 +19,311 @@ class _DashboardPageState extends State<DashboardPage> {
     context.read<AuthBloc>().add(GetProfileRequested());
   }
 
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    // TODO: Implement navigation logic based on index
+  }
+
+  Widget _buildBody(AuthState state) {
+    if (state is ProfileLoading) {
+      return const Center(child: CircularProgressIndicator());
+    } else if (state is ProfileLoaded) {
+      final user = state.user;
+      final birthDate = user.birthDate;
+      final currentDate = DateTime.now();
+      final age = currentDate.year - birthDate.year;
+      final ageDisplay = birthDate.month > currentDate.month ||
+              (birthDate.month == currentDate.month &&
+                  birthDate.day > currentDate.day)
+          ? age - 1
+          : age;
+
+      return SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment:
+              CrossAxisAlignment.start, // Align content to start
+          children: [
+            // Large illustration at the top
+            Image.asset(
+              'assets/dashboard-img.png', // Using main.png, update if a different asset is intended
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: 250, // Adjust height as needed
+            ),
+            const SizedBox(height: 16), // Spacing after image
+            // User info row (Gems, Streak, Greeting, Avatar)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Gems and Streak
+                  Row(
+                    children: const [
+                      Icon(Icons.diamond,
+                          color: Colors.blue, size: 20), // Gems icon
+                      SizedBox(width: 4),
+                      Text('26',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold)), // Gems count
+                      SizedBox(width: 16),
+                      Icon(Icons.local_fire_department,
+                          color: Colors.deepOrange, size: 20), // Streak icon
+                      SizedBox(width: 4),
+                      Text('🔥',
+                          style: TextStyle(
+                              fontSize:
+                                  16)), // Streak count (using fire emoji for now)
+                    ],
+                  ),
+                  // Greeting and Avatar
+                  Row(
+                    children: [
+                      // Greeting Bubble
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.orange[100], // Light orange background
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text('👋 Hi, ${user.nickname}',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w500, fontSize: 16)),
+                      ),
+                      const SizedBox(width: 12),
+                      // Avatar
+                      CircleAvatar(
+                        radius: 24,
+                        backgroundColor: Colors.orange[100],
+                        child: const Icon(Icons.person,
+                            color: Colors.brown, size: 24), // User icon
+                      ), // Replace with user avatar image if available
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32), // Spacing after user info
+            // Horizontal Story Card
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: _HorizontalDashboardCard(
+                title: 'Stories', // Example title
+                level: 'Level 3', // Example level
+                onTap: () {
+                  Navigator.pushNamed(
+                      context, '/story'); // Keep existing navigation
+                },
+                colors: const [
+                  Colors.purple,
+                  Colors.blueAccent
+                ], // Example gradient colors (adjust as needed)
+              ),
+            ),
+            const SizedBox(height: 16), // Spacing between cards
+            // Horizontal Vocabulary Card
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: _HorizontalDashboardCard(
+                title: 'Quizzes', // Example title
+                level: 'Level 1', // Example level
+                onTap: () {
+                  Navigator.pushNamed(
+                      context, '/vocabulary'); // Keep existing navigation
+                },
+                colors: const [
+                  Colors.pinkAccent,
+                  Colors.redAccent
+                ], // Example gradient colors (adjust as needed)
+              ),
+            ),
+            const SizedBox(height: 32), // Spacing at the bottom
+            // The rest of the body content can go here if needed, ensure padding is handled
+          ],
+        ),
+      );
+    } else if (state is ProfileError) {
+      return Center(child: Text('Error: ${state.message}'));
+    }
+    return const Center(child: Text('No profile data available'));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: const BackButton(),
-        backgroundColor: Colors.white,
-        elevation: 0,
-      ),
-      backgroundColor: Colors.white,
-      body: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) {
-          if (state is ProfileLoading) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (state is ProfileLoaded) {
-            final user = state.user;
-            final birthDate = user.birthDate;
-            final currentDate = DateTime.now();
-            final age = currentDate.year - birthDate.year;
-            final ageDisplay = birthDate.month > currentDate.month ||
-                    (birthDate.month == currentDate.month && birthDate.day > currentDate.day)
-                ? age - 1
-                : age;
-
-            return SingleChildScrollView(
-              child: Column(
-                children: [
-                  // Top illustration
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Image.asset(
-                        'assets/main.png',
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: 180,
-                      ),
-                    ),
-                  ),
-                  // User info row - ENHANCED PROFILE SECTION
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pushNamed(context, '/profile');
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.orange[50],
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.orange.withOpacity(0.2),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Gems and rank
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Row(
-                                children: [
-                                  Icon(Icons.diamond, color: Colors.blue, size: 20),
-                                  SizedBox(width: 4),
-                                  Text('26',
-                                      style: TextStyle(fontWeight: FontWeight.bold)),
-                                ],
-                              ),
-                              SizedBox(height: 2),
-                              Text('Rank: 4',
-                                  style: TextStyle(fontSize: 12, color: Colors.black54)),
-                            ],
-                          ),
-                          // User greeting with dynamic nickname and age
-                          Row(
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text('👋 Hi, ${user.nickname}',
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.w500, fontSize: 16)),
-                                  Text('$ageDisplay Years old',
-                                      style: const TextStyle(fontSize: 14, color: Colors.black54)),
-                                  const SizedBox(height: 4),
-                                  const Text('Tap to view profile',
-                                      style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.blue,
-                                          fontWeight: FontWeight.w500)),
-                                ],
-                              ),
-                              const SizedBox(width: 12),
-                              // Avatar - Made bigger
-                              Stack(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 28,
-                                    backgroundColor: Colors.orange[100],
-                                    child: const Icon(Icons.person, color: Colors.brown, size: 32),
-                                  ),
-                                  Positioned(
-                                    right: 0,
-                                    bottom: 0,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(4),
-                                      decoration: const BoxDecoration(
-                                        color: Colors.blue,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(
-                                        Icons.arrow_forward,
-                                        color: Colors.white,
-                                        size: 12,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // Ready to learn
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Ready to learn?',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-                      ),
-                    ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 4),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Continue where you left off',
-                        style: TextStyle(fontSize: 14, color: Colors.black54),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // Story, Vocabulary, and Emotion cards
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: [
-                        _DashboardCard(
-                          image: 'assets/cinderella.png',
-                          label: 'Story',
-                          onTap: () {
-                            Navigator.pushNamed(context, '/story');
-                          },
-                        ),
-                        _DashboardCard(
-                          image: 'assets/vocabulary.png',
-                          label: 'Vocabulary',
-                          onTap: () {
-                            Navigator.pushNamed(context, '/vocabulary');
-                          },
-                        ),
-                        // _DashboardCard(
-                        //   image: 'assets/emotion.png', // Add an emotion icon/image
-                        //   label: 'Emotion Detection',
-                        //   onTap: () {
-                        //     Navigator.pushNamed(context, '/emotion');
-                        //   },
-                        // ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                ],
+      extendBody: true,
+      body: Stack(
+        children: [
+          // Background Gradient
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    const Color(0xFFFFE082).withOpacity(0.3),
+                    Colors.white,
+                  ],
+                ),
               ),
-            );
-          } else if (state is ProfileError) {
-            return Center(child: Text('Error: ${state.message}'));
-          }
-          return const Center(child: Text('No profile data available'));
-        },
+            ),
+          ),
+          // Main Content Area
+          Positioned.fill(
+            child: Padding(
+              padding: const EdgeInsets.only(
+                  bottom: 70.0), // Add padding for navbar height
+              child: BlocBuilder<AuthBloc, AuthState>(
+                builder: (context, state) {
+                  return _buildBody(state);
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: <BottomNavigationBarItem>[
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.book), // Example icon
+            label: 'Stories',
+          ),
+          BottomNavigationBarItem(
+            icon: Container(
+              padding: const EdgeInsets.all(
+                  8.0), // Add padding for bigger circle effect
+              decoration: const BoxDecoration(
+                color:
+                    Color(0xFFFBC02D), // Yellow background for the center item
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.play_circle_fill,
+                  size: 30, color: Colors.white), // Larger icon and white color
+            ),
+            label: 'Play',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.school), // Example icon
+            label: 'Learn',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.person), // Example icon
+            label: 'Profile',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: const Color(0xFFFBC02D), // Yellow color
+        unselectedItemColor: Colors.grey,
+        onTap: _onItemTapped,
+        backgroundColor: Colors.white, // White background for navbar
+        type: BottomNavigationBarType.fixed, // Ensures all items are visible
+        showUnselectedLabels: true,
       ),
     );
   }
 }
 
+// New widget for the horizontal dashboard cards
+class _HorizontalDashboardCard extends StatelessWidget {
+  final String title;
+  final String level;
+  final VoidCallback onTap;
+  final List<Color> colors;
+
+  const _HorizontalDashboardCard({
+    required this.title,
+    required this.level,
+    required this.onTap,
+    required this.colors,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity, // Take full width
+        height: 140, // Adjust height as needed
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: colors,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Stack(
+            children: [
+              // Play Icon
+              Align(
+                alignment: Alignment.topLeft,
+                child: Container(
+                  padding: const EdgeInsets.all(4.0),
+                  decoration: BoxDecoration(
+                    color: Colors.white
+                        .withOpacity(0.3), // Semi-transparent white circle
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.play_arrow, // Play icon
+                    color: Colors.white, // White color
+                    size: 40,
+                  ),
+                ),
+              ),
+              // Level and Title
+              Align(
+                alignment: Alignment.bottomLeft,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      level,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white
+                            .withOpacity(0.8), // Slightly transparent white
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white, // White color
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Image on the right (Placeholder for now, or remove if not needed per image interpretation)
+              // You might need to add a specific asset here if the gradient doesn't cover the image area
+              // Align(
+              //   alignment: Alignment.centerRight,
+              //   child: Image.asset('assets/some_illustration.png', height: 100), // Example
+              // ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Keep the original _DashboardCard if it's used elsewhere or remove if not.
+/*
 class _DashboardCard extends StatelessWidget {
   final String image;
   final String label;
@@ -248,20 +357,26 @@ class _DashboardCard extends StatelessWidget {
           child: Column(
             children: [
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                borderRadius:
+                    BorderRadius.circular(16), // Apply border radius to image
                 child: Image.asset(
                   image,
-                  height: 90,
-                  width: double.infinity,
                   fit: BoxFit.cover,
+                  height: 90, // Adjust height as needed
+                  width: double.infinity,
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
                 label,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
-              const SizedBox(height: 12),
             ],
           ),
         ),
@@ -269,3 +384,4 @@ class _DashboardCard extends StatelessWidget {
     );
   }
 }
+*/

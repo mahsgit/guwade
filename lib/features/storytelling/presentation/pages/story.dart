@@ -64,7 +64,7 @@ class _StorySelectionPageState extends State<StorySelectionPage>
     super.build(context);
 
     return Scaffold(
-      backgroundColor: Colors.yellow[50],
+      backgroundColor: Color.fromARGB(255, 255, 219, 129),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -101,13 +101,13 @@ class _StorySelectionPageState extends State<StorySelectionPage>
       margin: const EdgeInsets.symmetric(horizontal: 16),
       height: 180,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(16),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: Image.asset(
-          'assets/main.png',
+          'assets/slide3.png',
           fit: BoxFit.cover,
           width: double.infinity,
           errorBuilder: (context, error, stackTrace) {
@@ -387,7 +387,8 @@ class _StorySelectionPageState extends State<StorySelectionPage>
                     GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         crossAxisSpacing: 16,
                         mainAxisSpacing: 16,
@@ -412,7 +413,13 @@ class _StorySelectionPageState extends State<StorySelectionPage>
   Future<Map<String, double>> _loadCategoriesProgress() async {
     final prefs = await SharedPreferences.getInstance();
     final progressMap = <String, double>{};
-    for (var category in ['math', 'engineering', 'science', 'technology', 'diy']) {
+    for (var category in [
+      'math',
+      'engineering',
+      'science',
+      'technology',
+      'diy'
+    ]) {
       progressMap[category] = prefs.getDouble('${category}_progress') ?? 0.0;
     }
     return progressMap;
@@ -448,7 +455,8 @@ class _StorySelectionPageState extends State<StorySelectionPage>
     );
   }
 
-  Widget _buildCategoryCard(Map<String, dynamic> category, BuildContext context) {
+  Widget _buildCategoryCard(
+      Map<String, dynamic> category, BuildContext context) {
     return GestureDetector(
       onTap: () {
         if (category['isAvailable']) {
@@ -635,7 +643,7 @@ class _StorySelectionPageState extends State<StorySelectionPage>
         const Padding(
           padding: EdgeInsets.only(left: 16, top: 24, bottom: 16),
           child: Text(
-            'read a story',
+            'Read a Story',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
