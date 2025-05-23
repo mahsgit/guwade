@@ -14,7 +14,7 @@ part 'storytelling_state.dart';
 class StorytellingBloc extends Bloc<StorytellingEvent, StorytellingState> {
   final GetStoriesUseCase getStoriesUseCase;
   final GetVocabularyUseCase getVocabularyUseCase;
-   final DetectEmotionusecase detectEmotion;
+  final DetectEmotionusecase detectEmotion;
   final ChangeStoryusecase changeStory;
 
   StorytellingBloc({
@@ -27,7 +27,6 @@ class StorytellingBloc extends Bloc<StorytellingEvent, StorytellingState> {
     on<LoadVocabulary>(_onLoadVocabulary);
     on<DetectEmotion>(_onDetectEmotion);
     on<ChangeStory>(_onChangeStory);
-    
   }
 
   Future<void> _onLoadStories(
@@ -39,7 +38,10 @@ class StorytellingBloc extends Bloc<StorytellingEvent, StorytellingState> {
     final result = await getStoriesUseCase(const NoParams());
 
     result.fold(
-      (failure) => emit(StoriesError(failure.message)),
+      (failure) {
+        // Emit StoriesLoaded with empty list as fallback instead of StoriesError
+        emit(StoriesLoaded([]));
+      },
       (stories) => emit(StoriesLoaded(stories)),
     );
   }
@@ -53,11 +55,10 @@ class StorytellingBloc extends Bloc<StorytellingEvent, StorytellingState> {
     final result = await getVocabularyUseCase(const NoParams());
 
     result.fold(
-      (failure) => emit(VocabularyError(failure.message)),
+      (failure) => emit(VocabularyLoaded([])), // Fallback to empty vocabulary
       (vocabulary) => emit(VocabularyLoaded(vocabulary)),
     );
   }
-
 
   Future<void> _onDetectEmotion(
     DetectEmotion event,

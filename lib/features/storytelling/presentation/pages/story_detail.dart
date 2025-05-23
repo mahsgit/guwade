@@ -1,16 +1,14 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:buddy/features/quiz/presentation/pages/quiz_page.dart';
-import 'package:buddy/features/storytelling/data/models/story_model.dart';
 import 'package:buddy/features/storytelling/domain/entities/story.dart';
 import 'package:buddy/features/storytelling/domain/entities/vocabulary.dart';
 import 'package:buddy/features/storytelling/presentation/bloc/storytelling_bloc.dart';
+import 'package:buddy/main.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
-import 'package:path/path.dart' as path;
 
 class StoryDetailPage extends StatefulWidget {
   final Story story;
@@ -34,7 +32,6 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
   List<Map<String, dynamic>> _voices = [];
   String _selectedGender = 'female';
   CameraController? _cameraController;
-  List<CameraDescription>? cameras;
   bool _isCapturing = false;
   String _emotion = "Detecting...";
   Timer? _emotionTimer;
@@ -102,13 +99,12 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
   }
 
   Future<void> _initCamera() async {
-    cameras = await availableCameras();
-    if (cameras == null || cameras!.isEmpty) {
+    if (cameras.isEmpty) {
       print("No cameras found");
       setState(() => _emotion = "No Camera");
       return;
     }
-    _cameraController = CameraController(cameras!.first, ResolutionPreset.low);
+    _cameraController = CameraController(cameras.first, ResolutionPreset.low);
     await _cameraController!.initialize();
     if (mounted) setState(() {});
   }
@@ -661,6 +657,8 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
               style: TextStyle(fontSize: 20, fontFamily: 'ComicNeue', color: Colors.blueAccent),
             ),
           ),
+
+
           TextButton(
             onPressed: () {
               context.read<StorytellingBloc>().add(ChangeStory(storyId: _currentStory.id));

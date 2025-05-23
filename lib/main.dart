@@ -5,14 +5,12 @@ import 'package:buddy/features/quiz/presentation/bloc/quiz/quiz_bloc.dart';
 import 'package:buddy/features/storytelling/presentation/bloc/storytelling_bloc.dart';
 import 'package:buddy/features/storytelling/presentation/pages/story.dart';
 import 'package:buddy/features/storytelling/presentation/pages/vocabulary_page.dart';
-import 'package:camera/camera.dart'; // Added for camera initialization
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/injection/injection_container.dart' as di;
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/pages/login_page.dart';
-
-
 
 // Global camera list
 List<CameraDescription> cameras = [];
@@ -69,6 +67,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-
-

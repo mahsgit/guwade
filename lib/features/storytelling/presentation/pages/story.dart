@@ -1,4 +1,3 @@
-import 'package:buddy/features/stem/presentation/pages/stem_content.dart';
 import 'package:buddy/features/stem/presentation/pages/stem_detail_page.dart';
 import 'package:buddy/features/storytelling/domain/entities/story.dart';
 import 'package:buddy/features/storytelling/presentation/pages/story_detail.dart';
@@ -22,7 +21,6 @@ class _StorySelectionPageState extends State<StorySelectionPage>
   int _selectedTabIndex = 0;
   final List<String> _tabs = ['Story', 'STEM'];
   bool _isLoading = false;
-  bool _initialLoadDone = false;
 
   @override
   bool get wantKeepAlive => true; // Keep the state alive when navigating
@@ -30,9 +28,7 @@ class _StorySelectionPageState extends State<StorySelectionPage>
   @override
   void initState() {
     super.initState();
-    if (!_initialLoadDone) {
-      _loadStories();
-    }
+    _loadStories();
   }
 
   void _loadStories() {
@@ -44,20 +40,11 @@ class _StorySelectionPageState extends State<StorySelectionPage>
     if (currentState is StoriesLoaded && currentState.stories.isNotEmpty) {
       setState(() {
         _isLoading = false;
-        _initialLoadDone = true;
       });
       return;
     }
 
     context.read<StorytellingBloc>().add(LoadStories());
-
-    Future.delayed(const Duration(seconds: 10), () {
-      if (mounted && _isLoading) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    });
   }
 
   @override
@@ -654,13 +641,11 @@ class _StorySelectionPageState extends State<StorySelectionPage>
               } else {
                 setState(() {
                   _isLoading = false;
-                  _initialLoadDone = true;
                 });
               }
             },
             builder: (context, state) {
-              if (state is StoriesLoading ||
-                  (_isLoading && !_initialLoadDone)) {
+              if (state is StoriesLoading || _isLoading) {
                 return _buildLoadingIndicator();
               } else if (state is StoriesLoaded) {
                 final stories = state.stories;
@@ -680,22 +665,19 @@ class _StorySelectionPageState extends State<StorySelectionPage>
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => StoryDetailPage(
-                              story: story,
-                           
-                            ),
+                            builder: (context) => StoryDetailPage(story: story),
                           ),
                         ).then((_) {
-                          setState(() {});
+                          _loadStories(); // Reload stories on return
                         });
                       },
                     );
                   },
                 );
-              } else if (state is StoriesError) {
-                return _buildErrorMessage(state.message);
+              } else {
+                _loadStories(); // Trigger loading for initial or unexpected state
+                return _buildLoadingIndicator();
               }
-              return _buildFallbackContent();
             },
           ),
         ),
@@ -814,7 +796,7 @@ class _StorySelectionPageState extends State<StorySelectionPage>
                 ),
               ),
             ),
-          ),
+          ).then((_) => _loadStories()),
         ),
         _StoryCard(
           title: 'Queen of Bird',
@@ -834,7 +816,7 @@ class _StorySelectionPageState extends State<StorySelectionPage>
                 ),
               ),
             ),
-          ),
+          ).then((_) => _loadStories()),
         ),
       ],
     );
@@ -1083,5 +1065,3 @@ class _CategoryItem extends StatelessWidget {
     );
   }
 }
-
-
