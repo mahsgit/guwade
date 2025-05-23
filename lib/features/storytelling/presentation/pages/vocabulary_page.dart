@@ -1,5 +1,6 @@
 import 'package:buddy/features/science/presentation/pages/quiz_page.dart';
 import 'package:buddy/features/storytelling/domain/entities/vocabulary.dart';
+import 'package:buddy/features/storytelling/presentation/pages/test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -55,13 +56,12 @@ class _VocabularyPageState extends State<VocabularyPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => QuizPage(
-          topic: '',
-          // vocabulary: vocabulary,
-          // onComplete: () {
-          //   Navigator.pop(context);
-          //   _showAchievementDialog();
-          // },
+        builder: (context) => TestPage(
+          vocabulary: vocabulary,
+          onComplete: () {
+            Navigator.pop(context);
+            _showAchievementDialog();
+          },
         ),
       ),
     );
