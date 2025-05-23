@@ -21,6 +21,7 @@ class _EmotionCapturePageState extends State<EmotionCapturePage> {
     super.initState();
     initCamera();
   }
+  
 
   Future<void> initCamera() async {
     cameras = await availableCameras();

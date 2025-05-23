@@ -1,3 +1,4 @@
+import 'package:buddy/features/science/presentation/pages/quiz_category_page.dart';
 import 'package:buddy/features/stem/presentation/pages/stem_detail_page.dart';
 import 'package:buddy/features/storytelling/domain/entities/story.dart';
 import 'package:buddy/features/storytelling/presentation/pages/story_detail.dart';
@@ -19,7 +20,7 @@ class StorySelectionPage extends StatefulWidget {
 class _StorySelectionPageState extends State<StorySelectionPage>
     with AutomaticKeepAliveClientMixin {
   int _selectedTabIndex = 0;
-  final List<String> _tabs = ['Story', 'STEM'];
+  final List<String> _tabs = ['Story', 'STEM', 'Quiz'];
   bool _isLoading = false;
 
   @override
@@ -77,6 +78,7 @@ class _StorySelectionPageState extends State<StorySelectionPage>
               if (_selectedTabIndex == 0) _buildReadStorySection(),
               if (_selectedTabIndex == 0) _buildCategoriesSection(),
               if (_selectedTabIndex == 1) _buildStemSection(),
+              if (_selectedTabIndex == 2) _buildQuizSection(),
             ],
           ),
         ),
@@ -149,6 +151,233 @@ class _StorySelectionPageState extends State<StorySelectionPage>
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+Widget _buildQuizSection() {
+    return Container(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.all(16),
+            height: 180,
+            decoration: BoxDecoration(
+              color: Colors.amber[100],
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: Image.asset(
+                      'assets/quiz_header.png',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.amber[200],
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.quiz,
+                                  size: 64,
+                                  color: Colors.amber[700],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  "Quiz Time!",
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.amber[800],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 8, horizontal: 16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            Colors.black.withOpacity(0.7),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                      child: const Text(
+                        "Test Your Knowledge",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.lightbulb,
+                      color: Colors.amber[700],
+                      size: 24,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      "Quiz Categories",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  "Challenge yourself with fun quizzes! Choose a category below to test your knowledge.",
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildQuizCategoryCard(
+                  title: "Science",
+                  description: "Test your knowledge about the natural world",
+                  color: Colors.green[700]!,
+                  icon: Icons.science,
+                  onTap: () => _navigateToQuiz(context, "science"),
+                ),
+                const SizedBox(height: 12),
+                _buildQuizCategoryCard(
+                  title: "English",
+                  description: "Challenge your language and vocabulary skills",
+                  color: Colors.blue[700]!,
+                  icon: Icons.book,
+                  onTap: () => _navigateToQuiz(context, "english"),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _navigateToQuiz(BuildContext context, String topic) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => QuizCategoryPage(),
+      ),
+    );
+  }
+
+  Widget _buildQuizCategoryCard({
+    required String title,
+    required String description,
+    required Color color,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: color,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: color,
+              size: 16,
+            ),
+          ],
         ),
       ),
     );

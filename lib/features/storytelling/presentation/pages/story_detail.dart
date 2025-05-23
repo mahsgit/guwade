@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'package:buddy/features/quiz/presentation/pages/quiz_page.dart';
+import 'package:buddy/features/science/presentation/pages/quiz_page.dart';
 import 'package:buddy/features/storytelling/domain/entities/story.dart';
 import 'package:buddy/features/storytelling/domain/entities/vocabulary.dart';
 import 'package:buddy/features/storytelling/presentation/bloc/storytelling_bloc.dart';
@@ -391,18 +391,18 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
 
     return Stack(
       children: [
-        QuizPage(
-          vocabulary: pageVocab,
-          onComplete: () {
-            if (_currentPageIndex == _contentPages.length - 1) {
-              _showAchievementDialog();
-            } else {
-              _pageController.nextPage(
-                duration: const Duration(milliseconds: 500),
-                curve: Curves.easeInOut,
-              );
-            }
-          },
+        QuizPage(topic: '',
+          // vocabulary: pageVocab,
+          // onComplete: () {
+          //   if (_currentPageIndex == _contentPages.length - 1) {
+          //     _showAchievementDialog();
+          //   } else {
+          //     _pageController.nextPage(
+          //       duration: const Duration(milliseconds: 500),
+          //       curve: Curves.easeInOut,
+          //     );
+          //   }
+          // },
         ),
         Positioned(
           top: 10,

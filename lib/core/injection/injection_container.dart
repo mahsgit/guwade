@@ -1,5 +1,13 @@
 import 'package:buddy/features/auth/data/datasources/auth_local_datasource.dart';
 import 'package:buddy/features/auth/domain/usecases/logout_usecase.dart';
+
+import 'package:buddy/features/science/data/datasources/quiz_local_data_source.dart';
+import 'package:buddy/features/science/data/datasources/quiz_remote_data_source.dart';
+import 'package:buddy/features/science/data/repositories/quiz_repository_impl.dart';
+import 'package:buddy/features/science/domain/repositories/quiz_repository.dart';
+import 'package:buddy/features/science/domain/usecases/get_questions.dart';
+import 'package:buddy/features/science/domain/usecases/submit_answer.dart';
+import 'package:buddy/features/science/presentation/bloc/quiz_bloc.dart';
 import 'package:buddy/features/storytelling/data/datasources/story_local_data_source.dart';
 import 'package:buddy/features/storytelling/domain/usecases/emotion.dart';
 import 'package:buddy/features/storytelling/domain/usecases/story_change.dart';
@@ -22,7 +30,6 @@ import '../../features/storytelling/domain/usecases/get_stories_usecase.dart';
 import '../../features/storytelling/domain/usecases/get_vocabulary_usecase.dart';
 import '../../features/storytelling/presentation/bloc/storytelling_bloc.dart';
 import 'package:camera/camera.dart';
-
 
 final sl = GetIt.instance;
 
@@ -87,7 +94,6 @@ Future<void> init() async {
       client: sl(),
       authLocalDataSource: sl(),
       storyLocalDataSource: sl(),
-
     ),
   );
 
@@ -98,8 +104,7 @@ Future<void> init() async {
       networkInfo: sl(),
       authLocalDataSource: sl(),
       localDataSource: sl(),
-      
-  )
+    )
   );
 
   // Storytelling Local Data source
@@ -115,7 +120,6 @@ Future<void> init() async {
   sl.registerLazySingleton(() => DetectEmotionusecase(sl()));
   sl.registerLazySingleton(() => ChangeStoryusecase(sl()));
 
-
   // Storytelling Blocs
   sl.registerFactory(
     () => StorytellingBloc(
@@ -126,7 +130,41 @@ Future<void> init() async {
     ),
   );
 
- 
+  // Quiz Feature Dependencies
+  // Quiz Data sources
+  sl.registerLazySingleton<QuizRemoteDataSource>(
+    () => QuizRemoteDataSourceImpl(
+      client: sl(),
+      authLocalDataSource: sl(), // Add auth dependency
+    ),
+  );
+
+  sl.registerLazySingleton<QuizLocalDataSource>(
+    () => QuizLocalDataSourceImpl(
+      sharedPreferences: sl(),
+    ),
+  );
+
+  // Quiz Repository
+  sl.registerLazySingleton<QuizRepository>(
+    () => QuizRepositoryImpl(
+      remoteDataSource: sl(),
+      localDataSource: sl(),
+      networkInfo: sl(), // Add network info dependency
+    ),
+  );
+
+  // Quiz Use cases
+  sl.registerLazySingleton(() => GetQuestions(sl()));
+  sl.registerLazySingleton(() => SubmitAnswer(sl()));
+
+  // Quiz Bloc
+  sl.registerFactory(
+    () => QuizBloc(
+      getQuestions: sl(),
+      submitAnswer: sl(),
+    ),
+  );
 
   // Camera
   final cameras = await availableCameras();
