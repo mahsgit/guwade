@@ -61,7 +61,11 @@ flutter:
     - assets/comic.png
     - assets/adventure.png
     - assets/fantasy.png
-    - assets/emotion_model.tflite
+    - assets/slide1.png
+    - assets/slide2.png
+    - assets/slide3.png
+    - assets/login-img.png
+    # - assets/emotion_model.tflite
     
 
    

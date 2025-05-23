@@ -2,7 +2,6 @@ import 'package:buddy/core/constants/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/auth_bloc.dart';
-import '../widgets/animated_buddy_logo.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/login_button.dart';
 
@@ -34,13 +33,13 @@ class _LoginPageState extends State<LoginPage> {
   // region: Validation
   String? _validateUsername(String? value) {
     if (value == null || value.isEmpty) return 'Please enter your username';
-    if (value.length < 3) return 'Username must be at least 3 characters';
+    // Keep existing validation logic if any other than empty
     return null;
   }
 
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) return 'Please enter your password';
-    if (value.length < 6) return 'Password must be at least 6 characters';
+    // Keep existing validation logic if any other than empty
     return null;
   }
   // endregion
@@ -61,16 +60,14 @@ class _LoginPageState extends State<LoginPage> {
     if (state is AuthError) {
       _showSnackBar(context, state.message, AppColors.error);
     } else if (state is AuthAuthenticated) {
-    // Save token when authenticated
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Login successful!'),
-        backgroundColor: AppColors.success,
-        duration: const Duration(seconds: 2),
-      ),
-    );
-    Navigator.pushReplacementNamed(context, '/dashboard');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Login successful!'),
+          backgroundColor: AppColors.success,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      Navigator.pushReplacementNamed(context, '/dashboard');
     } else if (state is AuthUnauthenticated) {
       _showSnackBar(context, 'Logged out successfully', AppColors.success);
       Navigator.pushReplacementNamed(context, '/login');
@@ -88,75 +85,154 @@ class _LoginPageState extends State<LoginPage> {
   }
   // endregion
 
-  // region: UI Builders
-  Widget _buildLoginForm() => Form(
-        key: _formKey,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const AnimatedBuddyLogo(),
-            const SizedBox(height: 48),
-            _buildUsernameField(),
-            const SizedBox(height: 16),
-            _buildPasswordField(),
-            const SizedBox(height: 32),
-            _buildLoginButton(),
-          ],
-        ),
-      );
-
-  Widget _buildUsernameField() => CustomTextField(
-        controller: _usernameController,
-        hintText: 'Enter your username',
-        prefixIcon: Icons.person,
-        validator: _validateUsername,
-        style: const TextStyle(color: AppColors.textPrimary),
-        decoration: InputDecoration(
-          hintStyle: TextStyle(color: AppColors.textHint),
-          prefixIconColor: AppColors.primary,
-        ),
-      );
-
-  Widget _buildPasswordField() => CustomTextField(
-        controller: _passwordController,
-        hintText: 'Enter your password',
-        prefixIcon: Icons.lock,
-        obscureText: true,
-        validator: _validatePassword,
-        style: const TextStyle(color: AppColors.textPrimary),
-        decoration: InputDecoration(
-          hintStyle: TextStyle(color: AppColors.textHint),
-          prefixIconColor: AppColors.primary,
-        ),
-      );
-
-  Widget _buildLoginButton() => BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) => LoginButton(
-          onPressed: _onLoginPressed,
-          isLoading: state is AuthLoading,
-          backgroundColor: AppColors.buttonPrimary,
-          textColor: Colors.white,
-        ),
-      );
-  // endregion
-
-  // region: Build
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
       body: BlocListener<AuthBloc, AuthState>(
         listener: _handleAuthStateChange,
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: _buildLoginForm(),
+        child: Stack(
+          children: [
+            // Background Image
+            Positioned.fill(
+              child: Image.asset(
+                'assets/login-img.png',
+                fit: BoxFit.cover,
+              ),
             ),
-          ),
+            // Dark Overlay
+            Positioned.fill(
+              child: Container(
+                color:
+                    Colors.black.withOpacity(0.7), // Adjust opacity as needed
+              ),
+            ),
+            // Overlay Container
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.all(24.0),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(40),
+                    topRight: Radius.circular(40),
+                  ),
+                ),
+                child: SingleChildScrollView(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 16),
+                        // Welcome text
+                        const Text(
+                          'Welcome to Guade!',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFFFBC02D),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 32),
+                        // Username field
+                        CustomTextField(
+                          controller: _usernameController,
+                          hintText: 'johndoe@gmail.com',
+                          validator: _validateUsername,
+                          style: const TextStyle(
+                              color: Colors.black87, fontSize: 16),
+                          decoration: InputDecoration(
+                            // Use InputDecoration directly for specific styling
+                            hintStyle: TextStyle(
+                                color: Colors.grey[400], fontSize: 16),
+                            filled: true,
+                            fillColor:
+                                const Color(0xFFF5F5F5), // Light grey fill
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                  color: Colors.transparent,
+                                  width: 0), // No border when focused
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16.0, vertical: 14.0),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Password field
+                        CustomTextField(
+                          controller: _passwordController,
+                          hintText: '********',
+                          obscureText: true,
+                          validator: _validatePassword,
+                          style: const TextStyle(
+                              color: Colors.black87, fontSize: 16),
+                          decoration: InputDecoration(
+                            // Use InputDecoration directly for specific styling
+                            hintStyle: TextStyle(
+                                color: Colors.grey[400], fontSize: 16),
+                            filled: true,
+                            fillColor:
+                                const Color(0xFFF5F5F5), // Light grey fill
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                  color: Colors.transparent,
+                                  width: 0), // No border when focused
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16.0, vertical: 14.0),
+                            suffixIcon: Icon(Icons.remove_red_eye_outlined,
+                                color: Colors.grey[400]), // Eye icon
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        // Login button
+                        BlocBuilder<AuthBloc, AuthState>(
+                          builder: (context, state) => SizedBox(
+                            width: double.infinity,
+                            height: 56,
+                            child: LoginButton(
+                              onPressed: _onLoginPressed,
+                              isLoading: state is AuthLoading,
+                              backgroundColor:
+                                  const Color(0xFFFBC02D), // Yellow color
+                              textColor: Colors.white,
+                              buttonText:
+                                  'Get started →', // Updated button text
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
-  // endregion
 }

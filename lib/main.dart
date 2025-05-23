@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/injection/injection_container.dart' as di;
 import 'features/auth/presentation/pages/login_page.dart';
+import 'features/onboarding/slide1.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 
 /// Main entry point of the application
@@ -48,7 +49,8 @@ class MyApp extends StatelessWidget {
         ),
         initialRoute: '/',
         routes: {
-          '/': (context) => const LoginPage(),
+          '/': (context) => const OnboardingPage1(),
+          '/login': (context) => const LoginPage(),
           '/dashboard': (context) => const DashboardPage(),
           '/story': (context) => const StorySelectionPage(),
           '/vocabulary': (context) => const VocabularyPage(),

@@ -5,6 +5,7 @@ class LoginButton extends StatelessWidget {
   final bool isLoading;
   final Color backgroundColor;
   final Color textColor;
+  final String buttonText;
 
   const LoginButton({
     super.key,
@@ -12,6 +13,7 @@ class LoginButton extends StatelessWidget {
     this.isLoading = false,
     this.backgroundColor = Colors.blue,
     this.textColor = Colors.white,
+    this.buttonText = 'Login',
   });
 
   @override
@@ -38,8 +40,8 @@ class LoginButton extends StatelessWidget {
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               )
-            : const Text(
-                'Login',
+            : Text(
+                buttonText,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
