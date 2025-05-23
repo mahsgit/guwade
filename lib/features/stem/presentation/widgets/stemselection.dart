@@ -1,9 +1,12 @@
+import 'package:buddy/features/storytelling/domain/entities/story.dart';
+import 'package:buddy/main.dart';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:buddy/features/storytelling/presentation/pages/story_detail.dart';
 
 class StemSelectionWidget extends StatelessWidget {
-  const StemSelectionWidget({Key? key}) : super(key: key);
-
+  // Remove the unused and undefined cameras variable.
+  StemSelectionWidget({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -83,10 +86,12 @@ class StemSelectionWidget extends StatelessWidget {
             context,
             MaterialPageRoute(
               builder: (context) => StoryDetailPage(
-                storyId: storyId,
-                title: '$title Story',
-                imageUrl: 'assets/${title.toLowerCase()}_story.png',
-                content: _getStoryContent(title),
+                 story: Story(
+    id: storyId,
+    title: '$title Story',
+    imageUrl: 'assets/${title.toLowerCase()}_story.png',
+    storyBody: _getStoryContent(title),
+  ),
               ),
             ),
           );

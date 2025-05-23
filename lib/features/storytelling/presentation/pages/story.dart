@@ -1,5 +1,6 @@
-import 'package:buddy/features/stem/presentation/pages/stem_content.dart';
+import 'package:buddy/features/science/presentation/pages/quiz_category_page.dart';
 import 'package:buddy/features/stem/presentation/pages/stem_detail_page.dart';
+import 'package:buddy/features/storytelling/domain/entities/story.dart';
 import 'package:buddy/features/storytelling/presentation/pages/story_detail.dart';
 import 'package:buddy/features/storytelling/presentation/widgets/story_card.dart';
 import 'package:flutter/material.dart';
@@ -19,9 +20,8 @@ class StorySelectionPage extends StatefulWidget {
 class _StorySelectionPageState extends State<StorySelectionPage>
     with AutomaticKeepAliveClientMixin {
   int _selectedTabIndex = 0;
-  final List<String> _tabs = ['Story', 'STEM'];
+  final List<String> _tabs = ['Story', 'STEM', 'Quiz'];
   bool _isLoading = false;
-  bool _initialLoadDone = false;
 
   @override
   bool get wantKeepAlive => true; // Keep the state alive when navigating
@@ -29,9 +29,7 @@ class _StorySelectionPageState extends State<StorySelectionPage>
   @override
   void initState() {
     super.initState();
-    if (!_initialLoadDone) {
-      _loadStories();
-    }
+    _loadStories();
   }
 
   void _loadStories() {
@@ -43,20 +41,11 @@ class _StorySelectionPageState extends State<StorySelectionPage>
     if (currentState is StoriesLoaded && currentState.stories.isNotEmpty) {
       setState(() {
         _isLoading = false;
-        _initialLoadDone = true;
       });
       return;
     }
 
     context.read<StorytellingBloc>().add(LoadStories());
-
-    Future.delayed(const Duration(seconds: 10), () {
-      if (mounted && _isLoading) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    });
   }
 
   @override
@@ -64,7 +53,7 @@ class _StorySelectionPageState extends State<StorySelectionPage>
     super.build(context);
 
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 255, 219, 129),
+      backgroundColor: Colors.yellow[50],
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -89,6 +78,7 @@ class _StorySelectionPageState extends State<StorySelectionPage>
               if (_selectedTabIndex == 0) _buildReadStorySection(),
               if (_selectedTabIndex == 0) _buildCategoriesSection(),
               if (_selectedTabIndex == 1) _buildStemSection(),
+              if (_selectedTabIndex == 2) _buildQuizSection(),
             ],
           ),
         ),
@@ -101,13 +91,13 @@ class _StorySelectionPageState extends State<StorySelectionPage>
       margin: const EdgeInsets.symmetric(horizontal: 16),
       height: 180,
       decoration: BoxDecoration(
-        color: Colors.transparent,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: Image.asset(
-          'assets/slide3.png',
+          'assets/main.png',
           fit: BoxFit.cover,
           width: double.infinity,
           errorBuilder: (context, error, stackTrace) {
@@ -161,6 +151,233 @@ class _StorySelectionPageState extends State<StorySelectionPage>
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+Widget _buildQuizSection() {
+    return Container(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.all(16),
+            height: 180,
+            decoration: BoxDecoration(
+              color: Colors.amber[100],
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: Image.asset(
+                      'assets/quiz_header.png',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.amber[200],
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.quiz,
+                                  size: 64,
+                                  color: Colors.amber[700],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  "Quiz Time!",
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.amber[800],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 8, horizontal: 16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            Colors.black.withOpacity(0.7),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                      child: const Text(
+                        "Test Your Knowledge",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.lightbulb,
+                      color: Colors.amber[700],
+                      size: 24,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      "Quiz Categories",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  "Challenge yourself with fun quizzes! Choose a category below to test your knowledge.",
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildQuizCategoryCard(
+                  title: "Science",
+                  description: "Test your knowledge about the natural world",
+                  color: Colors.green[700]!,
+                  icon: Icons.science,
+                  onTap: () => _navigateToQuiz(context, "science"),
+                ),
+                const SizedBox(height: 12),
+                _buildQuizCategoryCard(
+                  title: "English",
+                  description: "Challenge your language and vocabulary skills",
+                  color: Colors.blue[700]!,
+                  icon: Icons.book,
+                  onTap: () => _navigateToQuiz(context, "english"),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _navigateToQuiz(BuildContext context, String topic) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => QuizCategoryPage(),
+      ),
+    );
+  }
+
+  Widget _buildQuizCategoryCard({
+    required String title,
+    required String description,
+    required Color color,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: color,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: color,
+              size: 16,
+            ),
+          ],
         ),
       ),
     );
@@ -387,8 +604,7 @@ class _StorySelectionPageState extends State<StorySelectionPage>
                     GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         crossAxisSpacing: 16,
                         mainAxisSpacing: 16,
@@ -413,13 +629,7 @@ class _StorySelectionPageState extends State<StorySelectionPage>
   Future<Map<String, double>> _loadCategoriesProgress() async {
     final prefs = await SharedPreferences.getInstance();
     final progressMap = <String, double>{};
-    for (var category in [
-      'math',
-      'engineering',
-      'science',
-      'technology',
-      'diy'
-    ]) {
+    for (var category in ['math', 'engineering', 'science', 'technology', 'diy']) {
       progressMap[category] = prefs.getDouble('${category}_progress') ?? 0.0;
     }
     return progressMap;
@@ -455,8 +665,7 @@ class _StorySelectionPageState extends State<StorySelectionPage>
     );
   }
 
-  Widget _buildCategoryCard(
-      Map<String, dynamic> category, BuildContext context) {
+  Widget _buildCategoryCard(Map<String, dynamic> category, BuildContext context) {
     return GestureDetector(
       onTap: () {
         if (category['isAvailable']) {
@@ -643,7 +852,7 @@ class _StorySelectionPageState extends State<StorySelectionPage>
         const Padding(
           padding: EdgeInsets.only(left: 16, top: 24, bottom: 16),
           child: Text(
-            'Read a Story',
+            'read a story',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -661,13 +870,11 @@ class _StorySelectionPageState extends State<StorySelectionPage>
               } else {
                 setState(() {
                   _isLoading = false;
-                  _initialLoadDone = true;
                 });
               }
             },
             builder: (context, state) {
-              if (state is StoriesLoading ||
-                  (_isLoading && !_initialLoadDone)) {
+              if (state is StoriesLoading || _isLoading) {
                 return _buildLoadingIndicator();
               } else if (state is StoriesLoaded) {
                 final stories = state.stories;
@@ -687,25 +894,19 @@ class _StorySelectionPageState extends State<StorySelectionPage>
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => StoryDetailPage(
-                              storyId: story.id,
-                              title: story.title,
-                              imageUrl: story.imageUrl ?? '',
-                              content:
-                                  story.storyBody ?? 'No content available',
-                            ),
+                            builder: (context) => StoryDetailPage(story: story),
                           ),
                         ).then((_) {
-                          setState(() {});
+                          _loadStories(); // Reload stories on return
                         });
                       },
                     );
                   },
                 );
-              } else if (state is StoriesError) {
-                return _buildErrorMessage(state.message);
+              } else {
+                _loadStories(); // Trigger loading for initial or unexpected state
+                return _buildLoadingIndicator();
               }
-              return _buildFallbackContent();
             },
           ),
         ),
@@ -812,17 +1013,19 @@ class _StorySelectionPageState extends State<StorySelectionPage>
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const StoryDetailPage(
-                storyId: '1',
-                title: 'Fairy Tale Story',
-                imageUrl: 'assets/fairy_tale.png',
-                content:
-                    'Once upon a time, there was a beautiful princess who lived in a castle. '
-                    'She was known throughout the kingdom for her kindness and wisdom. '
-                    'One day, a mysterious bird with golden feathers appeared at her window.',
+              builder: (context) => StoryDetailPage(
+                story: Story(
+                  id: '1',
+                  title: 'Fairy Tale Story',
+                  imageUrl: 'assets/fairy_tale.png',
+                  storyBody:
+                      'Once upon a time, there was a beautiful princess who lived in a castle. '
+                      'She was known throughout the kingdom for her kindness and wisdom. '
+                      'One day, a mysterious bird with golden feathers appeared at her window.',
+                ),
               ),
             ),
-          ),
+          ).then((_) => _loadStories()),
         ),
         _StoryCard(
           title: 'Queen of Bird',
@@ -830,17 +1033,19 @@ class _StorySelectionPageState extends State<StorySelectionPage>
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const StoryDetailPage(
-                storyId: '2',
-                title: 'Queen of Bird',
-                imageUrl: 'assets/queen_bird.png',
-                content:
-                    'In a magical forest, there lived a magnificent bird with feathers of gold and blue. '
-                    'This was no ordinary bird, but the queen of all birds, who could speak the language of humans. '
-                    'She watched over the forest and all its creatures with wisdom and care.',
+              builder: (context) => StoryDetailPage(
+                story: Story(
+                  id: '2',
+                  title: 'Queen of Bird',
+                  imageUrl: 'assets/queen_bird.png',
+                  storyBody:
+                      'In a magical forest, there lived a magnificent bird with feathers of gold and blue. '
+                      'This was no ordinary bird, but the queen of all birds, who could speak the language of humans. '
+                      'She watched over the forest and all its creatures with wisdom and care.',
+                ),
               ),
             ),
-          ),
+          ).then((_) => _loadStories()),
         ),
       ],
     );

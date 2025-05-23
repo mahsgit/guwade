@@ -1,6 +1,6 @@
 import 'package:buddy/features/home/presentation/pages/dashboard.dart';
 import 'package:buddy/features/profile/presentation/pages/profile.dart';
-import 'package:buddy/features/quiz/presentation/bloc/quiz/quiz_bloc.dart';
+import 'package:buddy/features/science/presentation/bloc/quiz_bloc.dart';
 import 'package:buddy/features/storytelling/presentation/bloc/storytelling_bloc.dart';
 import 'package:buddy/features/storytelling/presentation/pages/story.dart';
 import 'package:buddy/features/storytelling/presentation/pages/vocabulary_page.dart';

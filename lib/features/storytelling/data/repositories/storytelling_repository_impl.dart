@@ -17,7 +17,6 @@ class StorytellingRepositoryImpl implements StorytellingRepository {
 
   StorytellingRepositoryImpl({
     required this.remoteDataSource,
-  
     required this.networkInfo,
     required this.authLocalDataSource,
     required this.localDataSource,
@@ -62,6 +61,48 @@ class StorytellingRepositoryImpl implements StorytellingRepository {
     } else {
       final vocabulary = await localDataSource.getVocabulary();
       return Right(vocabulary);
+    }
+  }
+
+  
+
+  @override
+  Future<Either<Failure, String>> detectEmotion(List<List<int>> frames) async {
+    if (await networkInfo.isConnected) {
+      try {
+        final token = await authLocalDataSource.getToken();
+        if (token == null) {
+          return Left(AuthFailure('Session expired. Please login again.'));
+        }
+        final emotion = await remoteDataSource.detectEmotion(frames);
+        return Right(emotion);
+      } on UnauthorizedException catch (e) {
+        return Left(AuthFailure(e.message));
+      } on ServerException {
+        return Left(ServerFailure('Failed to detect emotion'));
+      }
+    } else {
+      return Left(ServerFailure('No internet connection'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Story>> changeStory(String currentStoryId) async {
+    if (await networkInfo.isConnected) {
+      try {
+        final token = await authLocalDataSource.getToken();
+        if (token == null) {
+          return Left(AuthFailure('Session expired. Please login again.'));
+        }
+        final story = await remoteDataSource.changeStory(currentStoryId);
+        return Right(story);
+      } on UnauthorizedException catch (e) {
+        return Left(AuthFailure(e.message));
+      } on ServerException {
+        return Left(ServerFailure('Failed to change story'));
+      }
+    } else {
+      return Left(ServerFailure('No internet connection'));
     }
   }
 }
