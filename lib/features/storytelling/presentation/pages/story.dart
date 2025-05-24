@@ -402,7 +402,7 @@ class _StorySelectionPageState extends State<StorySelectionPage>
   }
 
   Widget _buildStemSection() {
-    final List<Map<String, dynamic>> _categories = [
+    final List<Map<String, dynamic>> categories = [
       {
         'id': 'math',
         'title': 'Mathematics',
@@ -464,7 +464,7 @@ class _StorySelectionPageState extends State<StorySelectionPage>
         }
 
         final progressMap = snapshot.data ?? {};
-        for (var category in _categories) {
+        for (var category in categories) {
           category['progress'] = progressMap[category['id']] ?? 0.0;
         }
 
@@ -628,9 +628,9 @@ class _StorySelectionPageState extends State<StorySelectionPage>
                         mainAxisSpacing: 16,
                         childAspectRatio: 0.8,
                       ),
-                      itemCount: _categories.length,
+                      itemCount: categories.length,
                       itemBuilder: (context, index) {
-                        final category = _categories[index];
+                        final category = categories[index];
                         return _buildCategoryCard(category, context);
                       },
                     ),

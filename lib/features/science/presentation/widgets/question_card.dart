@@ -8,12 +8,12 @@ class QuestionCard extends StatefulWidget {
   final int? correctAnswerIndex;
 
   const QuestionCard({
-    Key? key,
+    super.key,
     required this.question,
     this.onAnswerSelected,
     this.selectedAnswerIndex,
     this.correctAnswerIndex,
-  }) : super(key: key);
+  });
 
   @override
   State<QuestionCard> createState() => _QuestionCardState();

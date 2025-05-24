@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 
 class OnboardingPage3 extends StatelessWidget {
-  const OnboardingPage3({Key? key}) : super(key: key);
+  const OnboardingPage3({super.key});
 
   @override
   Widget build(BuildContext context) {

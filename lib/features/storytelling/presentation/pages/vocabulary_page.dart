@@ -234,7 +234,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
                     bool isEnabled = state is VocabularyLoaded && state.vocabulary.isNotEmpty;
                     return ElevatedButton.icon(
                       onPressed: isEnabled
-                          ? () => _navigateToQuiz((state as VocabularyLoaded).vocabulary)
+                          ? () => _navigateToQuiz((state).vocabulary)
                           : null,
                       icon: const Icon(Icons.quiz, color: Colors.white),
                       label: const Text("Start Quiz", style: TextStyle(color: Colors.white)),
@@ -316,9 +316,9 @@ class _VocabularyPageState extends State<VocabularyPage> {
 
                           final List<Color> cardColors = [
                             const Color(0xFFE8EAF6), // Light blue-gray
-                            const Color(0xECEFF1),  // Light gray
-                            const Color(0xE0F7FA), // Light teal
-                            const Color(0xF5F5F5), // Very light gray
+                            const Color(0x00eceff1),  // Light gray
+                            const Color(0x00e0f7fa), // Light teal
+                            const Color(0x00f5f5f5), // Very light gray
                           ];
 
                           final cardColor = cardColors[index % cardColors.length];

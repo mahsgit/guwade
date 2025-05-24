@@ -2,24 +2,15 @@ import 'package:buddy/features/science/domain/entities/achievement.dart';
 
 class AchievementModel extends Achievement {
   AchievementModel({
-    required String achievementId,
-    required String childId,
-    required String type,
-    required String title,
-    required String description,
-    required DateTime earnedAt,
-    required int streakCount,
-    required int totalCorrect,
-  }) : super(
-          achievementId: achievementId,
-          childId: childId,
-          type: type,
-          title: title,
-          description: description,
-          earnedAt: earnedAt,
-          streakCount: streakCount,
-          totalCorrect: totalCorrect,
-        );
+    required super.achievementId,
+    required super.childId,
+    required super.type,
+    required super.title,
+    required super.description,
+    required super.earnedAt,
+    required super.streakCount,
+    required super.totalCorrect,
+  });
 
   factory AchievementModel.fromJson(Map<String, dynamic> json) {
     return AchievementModel(

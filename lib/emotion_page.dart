@@ -1,4 +1,4 @@
- import 'dart:async';
+import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -28,41 +28,13 @@ class _EmotionCapturePageState extends State<EmotionCapturePage> {
     cameras = await availableCameras();
     if (cameras!.isEmpty) {
       print("No cameras found");
-      setState(() {
-        responseText = "No cameras available on this device.";
-      });
       return;
     }
-
-    // Find the front-facing camera
-    CameraDescription? frontCamera = cameras!.firstWhere(
-      (camera) => camera.lensDirection == CameraLensDirection.front,
-      orElse: () {
-        print("No front camera found");
-        setState(() {
-          responseText = "No front camera available.";
-        });
-        return null; // Return null if no front camera is found
-      },
-    );
-
-    if (frontCamera == null) {
-      return; // Exit if no front camera is found
-    }
-
-    _cameraController = CameraController(frontCamera, ResolutionPreset.low);
-    try {
-      await _cameraController!.initialize();
-      if (mounted) setState(() {});
-    } catch (e) {
-      print("Error initializing camera: $e");
-      setState(() {
-        responseText = "Error initializing camera: $e";
-      });
-    }
+    _cameraController = CameraController(cameras!.first, ResolutionPreset.low);
+    await _cameraController!.initialize();
+    if (mounted) setState(() {});
   }
 
-  // Rest of the code remains unchanged
   Future<void> captureAndSendFrames() async {
     if (_cameraController == null || !_cameraController!.value.isInitialized) return;
 
@@ -74,12 +46,14 @@ class _EmotionCapturePageState extends State<EmotionCapturePage> {
     final List<XFile> capturedFrames = [];
 
     try {
+      // Capture 30 frames at ~100ms intervals (adjust if needed)
       for (int i = 0; i < 30; i++) {
         XFile file = await _cameraController!.takePicture();
         capturedFrames.add(file);
         await Future.delayed(Duration(milliseconds: 100));
       }
 
+      // Send captured images to backend
       final response = await sendFramesToServer(capturedFrames);
 
       setState(() {
@@ -97,10 +71,11 @@ class _EmotionCapturePageState extends State<EmotionCapturePage> {
   }
 
   Future<String> sendFramesToServer(List<XFile> frames) async {
-    final uri = Uri.parse('https://emotion-backend-sh1h.onrender.com/predict');
+    final uri = Uri.parse('https://emotion-backend-sh1h.onrender.com/predict'); // Change to your backend URL
 
     var request = http.MultipartRequest('POST', uri);
 
+    // Add each frame as 'frames' in multipart form
     for (var frame in frames) {
       var bytes = await frame.readAsBytes();
       var multipartFile = http.MultipartFile.fromBytes(
@@ -131,15 +106,8 @@ class _EmotionCapturePageState extends State<EmotionCapturePage> {
   @override
   Widget build(BuildContext context) {
     if (_cameraController == null || !_cameraController!.value.isInitialized) {
-      return Scaffold(
-        body: Center(
-          child: responseText.isNotEmpty
-              ? Text(responseText)
-              : CircularProgressIndicator(),
-        ),
-      );
+      return Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-
 
     return Scaffold(
       appBar: AppBar(title: Text("Capture & Send Frames")),

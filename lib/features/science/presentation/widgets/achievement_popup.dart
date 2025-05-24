@@ -5,9 +5,9 @@ class AchievementPopup extends StatelessWidget {
   final List<Achievement> achievements;
 
   const AchievementPopup({
-    Key? key,
+    super.key,
     required this.achievements,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +53,7 @@ class AchievementPopup extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
-            ...achievements.map((achievement) => _buildAchievementItem(achievement)).toList(),
+            ...achievements.map((achievement) => _buildAchievementItem(achievement)),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {

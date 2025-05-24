@@ -5,14 +5,10 @@ import 'package:buddy/features/science/domain/entities/answer_result.dart';
 
 class AnswerResultModel extends AnswerResult {
   AnswerResultModel({
-    required bool isCorrect,
-    required QuestionModel question,
-    required List<AchievementModel> newAchievements,
-  }) : super(
-          isCorrect: isCorrect,
-          question: question,
-          newAchievements: newAchievements,
-        );
+    required super.isCorrect,
+    required QuestionModel super.question,
+    required List<AchievementModel> super.newAchievements,
+  });
 
   factory AnswerResultModel.fromJson(Map<String, dynamic> json) {
     return AnswerResultModel(

@@ -9,9 +9,9 @@ class StemDetailPage extends StatefulWidget {
   final StemCategory category;
 
   const StemDetailPage({
-    Key? key,
+    super.key,
     required this.category,
-  }) : super(key: key);
+  });
 
   @override
   State<StemDetailPage> createState() => _StemDetailPageState();

@@ -6,7 +6,7 @@ import 'package:buddy/features/storytelling/presentation/pages/story_detail.dart
 
 class StemSelectionWidget extends StatelessWidget {
   // Remove the unused and undefined cameras variable.
-  StemSelectionWidget({Key? key}) : super(key: key);
+  const StemSelectionWidget({super.key});
   @override
   Widget build(BuildContext context) {
     return Column(
