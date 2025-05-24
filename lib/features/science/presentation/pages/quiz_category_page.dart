@@ -2,7 +2,7 @@ import 'package:buddy/features/science/presentation/pages/quiz_page.dart';
 import 'package:flutter/material.dart';
 
 class QuizCategoryPage extends StatelessWidget {
-  const QuizCategoryPage({Key? key}) : super(key: key);
+  const QuizCategoryPage({super.key});
 
   @override
   Widget build(BuildContext context) {

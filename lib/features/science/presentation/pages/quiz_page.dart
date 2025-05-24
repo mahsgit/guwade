@@ -10,9 +10,9 @@ class QuizPage extends StatefulWidget {
   final String topic;
 
   const QuizPage({
-    Key? key,
+    super.key,
     required this.topic,
-  }) : super(key: key);
+  });
 
   @override
   State<QuizPage> createState() => _QuizPageState();

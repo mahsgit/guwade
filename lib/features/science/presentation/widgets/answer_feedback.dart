@@ -5,10 +5,10 @@ class AnswerFeedback extends StatelessWidget {
   final String correctAnswer;
 
   const AnswerFeedback({
-    Key? key,
+    super.key,
     required this.isCorrect,
     required this.correctAnswer,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
