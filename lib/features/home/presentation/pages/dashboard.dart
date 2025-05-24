@@ -133,7 +133,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 level: 'Level 1', // Example level
                 onTap: () {
                   Navigator.pushNamed(
-                      context, '/vocabulary'); // Keep existing navigation
+                      context, '/story'); // Keep existing navigation
                 },
                 colors: const [
                   Colors.pinkAccent,

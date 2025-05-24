@@ -32,11 +32,11 @@ class CustomNavBar extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildNavItem(0, Icons.home_rounded, 'Home'),
-              _buildNavItem(1, Icons.book_rounded, 'Vocabulary'),
+              _buildNavItem(0, Icons.home_rounded, 'Home', context),
+              _buildNavItem(1, Icons.book_rounded, 'Vocabulary', context),
               _buildProfileItem(),
-              _buildNavItem(3, Icons.note_rounded, 'Notes'),
-              _buildNavItem(4, Icons.person_rounded, 'Profile'),
+              _buildNavItem(3, Icons.note_rounded, 'Achievements', context),
+              _buildNavItem(4, Icons.person_rounded, 'Profile', context),
             ],
           ),
         ),
@@ -44,36 +44,59 @@ class CustomNavBar extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItem(int index, IconData icon, String label) {
+  Widget _buildNavItem(int index, IconData icon, String label, BuildContext context) {
     final bool isSelected = selectedIndex == index;
     return InkWell(
-      onTap: () => onTap(index),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
-            size: 22,
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
+      onTap: () {
+        onTap(index); // Call the provided onTap callback
+        switch (index) {
+          case 0:
+            Navigator.pushNamed(context, '/dashboard');
+            break;
+          case 1:
+            Navigator.pushNamed(context, '/vocabulary');
+            break;
+          case 3:
+            // Placeholder for Achievements (no route specified)
+            // Optionally show a dialog or navigate to a placeholder route
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Achievements page coming soon!')),
+            );
+            break;
+          case 4:
+            Navigator.pushNamed(context, '/profile');
+            break;
+        }
+      },
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
               color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
-              fontSize: 11,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              size: 18, // Reduced from 22 to help with overflow
             ),
-          ),
-        ],
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
+                fontSize: 9, // Reduced from 11 to help with overflow
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildProfileItem() {
     return Container(
-      width: 40,
-      height: 40,
+      width: 32, // Reduced from 40 to align with constrained height
+      height: 32, // Reduced from 40
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: 2),
@@ -86,4 +109,4 @@ class CustomNavBar extends StatelessWidget {
       ),
     );
   }
-} 
+}

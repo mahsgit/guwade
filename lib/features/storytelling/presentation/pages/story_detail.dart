@@ -199,15 +199,11 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.translate, color: Colors.white, size: 30),
+            icon: const Icon(Icons.translate, color: Colors.amber, size: 30),
             onPressed: _showLanguageDialog,
           ),
           IconButton(
-            icon: const Icon(Icons.mic, color: Colors.white, size: 30),
-            onPressed: _showVoiceDialog,
-          ),
-          IconButton(
-            icon: const Icon(Icons.download, color: Colors.white, size: 30),
+            icon: const Icon(Icons.menu_book, color: Colors.amber, size: 30),
             onPressed: () {},
           ),
         ],
@@ -236,47 +232,59 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
             }
           }
 
-          return Stack(
-            children: [
-              PageView.builder(
-                controller: _pageController,
-                itemCount: _contentPages.length,
-                onPageChanged: _handlePageChange,
-                itemBuilder: (context, index) {
-                  final page = _contentPages[index];
-                  return page['type'] == 'story'
-                      ? _buildStoryPage(page['content'], index)
-                      : _buildQuizPage(page['vocabulary'], index, page['prevPageIndex']);
-                },
+          return Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.amber.withOpacity(0.6),
+                  Colors.amber.withOpacity(0.3),
+                ],
               ),
-              Positioned(
-                top: 10,
-                left: 10,
-                child: Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.8),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: _cameraController == null || !_cameraController!.value.isInitialized
-                      ? const Center(child: CircularProgressIndicator())
-                      : Column(
-                          children: [
-                            AspectRatio(
-                              aspectRatio: _cameraController!.value.aspectRatio,
-                              child: CameraPreview(_cameraController!),
-                            ),
-                            Text(
-                              _emotion,
-                              style: const TextStyle(color: Colors.white, fontSize: 12),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
+            ),
+            child: Stack(
+              children: [
+                PageView.builder(
+                  controller: _pageController,
+                  itemCount: _contentPages.length,
+                  onPageChanged: _handlePageChange,
+                  itemBuilder: (context, index) {
+                    final page = _contentPages[index];
+                    return page['type'] == 'story'
+                        ? _buildStoryPage(page['content'], index)
+                        : _buildQuizPage(page['vocabulary'], index, page['prevPageIndex']);
+                  },
                 ),
-              ),
-            ],
+                Positioned(
+                  top: 10,
+                  left: 10,
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: _cameraController == null || !_cameraController!.value.isInitialized
+                        ? const Center(child: CircularProgressIndicator())
+                        : Column(
+                            children: [
+                              AspectRatio(
+                                aspectRatio: _cameraController!.value.aspectRatio,
+                                child: CameraPreview(_cameraController!),
+                              ),
+                              Text(
+                                _emotion,
+                                style: const TextStyle(color: Colors.white, fontSize: 12),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+              ],
+            ),
           );
         },
       ),
@@ -311,7 +319,7 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                 right: 0,
                 child: Container(
                   padding: const EdgeInsets.all(16),
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.yellow.withOpacity(0.5),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -344,7 +352,7 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.8),
+                    color: Colors.yellow.withOpacity(0.8),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -411,7 +419,7 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.8),
+              color: Colors.yellow.withOpacity(0.8),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -457,7 +465,7 @@ class _StoryDetailPageState extends State<StoryDetailPage> {
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-      decoration: const BoxDecoration(color: Colors.black),
+      decoration: const BoxDecoration(color: Colors.yellow),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [

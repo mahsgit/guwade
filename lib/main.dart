@@ -42,6 +42,7 @@ class MyApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Buddy App',
         theme: ThemeData(
           primarySwatch: Colors.blue,
