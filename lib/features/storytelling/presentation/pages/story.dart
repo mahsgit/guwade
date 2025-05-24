@@ -1,3 +1,4 @@
+import 'package:buddy/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:buddy/features/science/presentation/pages/quiz_category_page.dart';
 import 'package:buddy/features/stem/presentation/pages/stem_detail_page.dart';
 import 'package:buddy/features/storytelling/domain/entities/story.dart';
@@ -6,6 +7,7 @@ import 'package:buddy/features/storytelling/presentation/widgets/story_card.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../navbar/navbar.dart';
 import '../bloc/storytelling_bloc.dart';
 
 /// StorySelectionPage displays a list of stories and categories.
@@ -19,7 +21,7 @@ class StorySelectionPage extends StatefulWidget {
 
 class _StorySelectionPageState extends State<StorySelectionPage>
     with AutomaticKeepAliveClientMixin {
-  int _selectedTabIndex = 0;
+  int _selectedIndex = 0;
   final List<String> _tabs = ['Story', 'STEM', 'Quiz'];
   bool _isLoading = false;
 
@@ -48,12 +50,18 @@ class _StorySelectionPageState extends State<StorySelectionPage>
     context.read<StorytellingBloc>().add(LoadStories());
   }
 
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
 
     return Scaffold(
-      backgroundColor: Colors.yellow[50],
+      backgroundColor: const Color(0xFFFADB69),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -69,19 +77,29 @@ class _StorySelectionPageState extends State<StorySelectionPage>
         ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              _buildTabSelector(),
-              if (_selectedTabIndex == 0) _buildReadStorySection(),
-              if (_selectedTabIndex == 0) _buildCategoriesSection(),
-              if (_selectedTabIndex == 1) _buildStemSection(),
-              if (_selectedTabIndex == 2) _buildQuizSection(),
-            ],
-          ),
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(),
+                    _buildTabSelector(),
+                    if (_selectedIndex == 0) _buildReadStorySection(),
+                    if (_selectedIndex == 1) _buildStemSection(),
+                    if (_selectedIndex == 2) _buildQuizSection(),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
+      ),
+      extendBody: true,
+      bottomNavigationBar: CustomNavBar(
+        selectedIndex: _selectedIndex,
+        onTap: _onItemTapped,
       ),
     );
   }
@@ -91,7 +109,7 @@ class _StorySelectionPageState extends State<StorySelectionPage>
       margin: const EdgeInsets.symmetric(horizontal: 16),
       height: 180,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(16),
       ),
       child: ClipRRect(
@@ -126,11 +144,11 @@ class _StorySelectionPageState extends State<StorySelectionPage>
           _tabs.length,
           (index) => Expanded(
             child: GestureDetector(
-              onTap: () => setState(() => _selectedTabIndex = index),
+              onTap: () => setState(() => _selectedIndex = index),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: _selectedTabIndex == index
+                  color: _selectedIndex == index
                       ? index == 0
                           ? Colors.yellow[200]
                           : Colors.teal[200]
@@ -142,7 +160,7 @@ class _StorySelectionPageState extends State<StorySelectionPage>
                     _tabs[index],
                     style: TextStyle(
                       color: Colors.black,
-                      fontWeight: _selectedTabIndex == index
+                      fontWeight: _selectedIndex == index
                           ? FontWeight.bold
                           : FontWeight.normal,
                     ),
@@ -156,7 +174,7 @@ class _StorySelectionPageState extends State<StorySelectionPage>
     );
   }
 
-Widget _buildQuizSection() {
+  Widget _buildQuizSection() {
     return Container(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -852,7 +870,7 @@ Widget _buildQuizSection() {
         const Padding(
           padding: EdgeInsets.only(left: 16, top: 24, bottom: 16),
           child: Text(
-            'read a story',
+            'Read a Story',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -1050,94 +1068,6 @@ Widget _buildQuizSection() {
       ],
     );
   }
-
-  Widget _buildCategoriesSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.only(left: 16, top: 24, bottom: 16),
-          child: Text(
-            'Categories',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        Container(
-          height: 100,
-          margin: const EdgeInsets.only(bottom: 24),
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            children: [
-              _CategoryItem(
-                title: "Children's Comic",
-                subtitle: "100 Stories",
-                color: Colors.indigo[900]!,
-                imageUrl: 'assets/comic.png',
-                onTap: () =>
-                    _showCategoryComingSoon(context, "Children's Comic"),
-              ),
-              _CategoryItem(
-                title: "Adventure",
-                subtitle: "85 Stories",
-                color: Colors.orange[900]!,
-                imageUrl: 'assets/adventure.png',
-                onTap: () => _showCategoryComingSoon(context, "Adventure"),
-              ),
-              _CategoryItem(
-                title: "Fantasy",
-                subtitle: "120 Stories",
-                color: Colors.red[900]!,
-                imageUrl: 'assets/fantasy.png',
-                onTap: () => _showCategoryComingSoon(context, "Fantasy"),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _showCategoryComingSoon(BuildContext context, String category) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Text(
-          "$category Coming Soon!",
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.upcoming,
-              size: 64,
-              color: Colors.amber[700],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              "We're preparing exciting $category stories for you. Stay tuned!",
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("OK"),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _StoryCard extends StatelessWidget {
@@ -1205,87 +1135,6 @@ class _StoryCard extends StatelessWidget {
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CategoryItem extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final Color color;
-  final String? imageUrl;
-  final VoidCallback onTap;
-
-  const _CategoryItem({
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    required this.imageUrl,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 160,
-        margin: const EdgeInsets.only(right: 16),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Positioned(
-              right: -10,
-              bottom: -10,
-              child: Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  image: imageUrl != null
-                      ? DecorationImage(
-                          image: AssetImage(imageUrl!),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
-                ),
-                child: imageUrl == null
-                    ? const Icon(Icons.category, color: Colors.white, size: 30)
-                    : null,
               ),
             ),
           ],

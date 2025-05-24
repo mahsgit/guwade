@@ -1,6 +1,7 @@
 import 'package:buddy/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../navbar/navbar.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -175,8 +176,7 @@ class _DashboardPageState extends State<DashboardPage> {
           // Main Content Area
           Positioned.fill(
             child: Padding(
-              padding: const EdgeInsets.only(
-                  bottom: 70.0), // Add padding for navbar height
+              padding: const EdgeInsets.only(bottom: 60.0),
               child: BlocBuilder<AuthBloc, AuthState>(
                 builder: (context, state) {
                   return _buildBody(state);
@@ -186,46 +186,9 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: <BottomNavigationBarItem>[
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.book), // Example icon
-            label: 'Stories',
-          ),
-          BottomNavigationBarItem(
-            icon: Container(
-              padding: const EdgeInsets.all(
-                  8.0), // Add padding for bigger circle effect
-              decoration: const BoxDecoration(
-                color:
-                    Color(0xFFFBC02D), // Yellow background for the center item
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.play_circle_fill,
-                  size: 30, color: Colors.white), // Larger icon and white color
-            ),
-            label: 'Play',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.school), // Example icon
-            label: 'Learn',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.person), // Example icon
-            label: 'Profile',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: const Color(0xFFFBC02D), // Yellow color
-        unselectedItemColor: Colors.grey,
+      bottomNavigationBar: CustomNavBar(
+        selectedIndex: _selectedIndex,
         onTap: _onItemTapped,
-        backgroundColor: Colors.white, // White background for navbar
-        type: BottomNavigationBarType.fixed, // Ensures all items are visible
-        showUnselectedLabels: true,
       ),
     );
   }
