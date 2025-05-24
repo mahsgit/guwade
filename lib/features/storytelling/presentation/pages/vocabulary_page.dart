@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../bloc/storytelling_bloc.dart';
+import 'package:buddy/features/navbar/navbar.dart';
 
 class VocabularyPage extends StatefulWidget {
   const VocabularyPage({super.key});
@@ -193,8 +194,8 @@ class _VocabularyPageState extends State<VocabularyPage> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFEDE7F6), // Light purple
-              Color(0xFFF3E5F5), // Slightly lighter purple
+              Color(0xFFFFF9C4), // Light yellow
+              Colors.white,
             ],
           ),
         ),
@@ -207,7 +208,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Color(0xFF6D4E9A)),
+                      icon: const Icon(Icons.arrow_back, color: Color(0xFFFBC02D)),
                       onPressed: () => Navigator.pop(context),
                     ),
                     const Expanded(
@@ -216,12 +217,12 @@ class _VocabularyPageState extends State<VocabularyPage> {
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF6D4E9A),
+                          color: Color(0xFFFBC02D),
                         ),
                         textAlign: TextAlign.center,
                       ),
                     ),
-                    const SizedBox(width: 48),
+                    const SizedBox(width: 48), // For balance
                   ],
                 ),
               ),
@@ -237,9 +238,9 @@ class _VocabularyPageState extends State<VocabularyPage> {
                           ? () => _navigateToQuiz((state).vocabulary)
                           : null,
                       icon: const Icon(Icons.quiz, color: Colors.white),
-                      label: const Text("Start Quiz", style: TextStyle(color: Colors.white)),
+                      label: const Text("Start Quiz →", style: TextStyle(color: Colors.white)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isEnabled ? const Color(0xFF6D4E9A) : Colors.grey[400]!,
+                        backgroundColor: isEnabled ? const Color(0xFFFBC02D) : Colors.grey[400]!,
                         minimumSize: const Size(double.infinity, 50),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(25),
@@ -263,7 +264,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6D4E9A)),
+                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFBC02D)),
                             ),
                             const SizedBox(height: 16),
                             Text(
@@ -314,15 +315,6 @@ class _VocabularyPageState extends State<VocabularyPage> {
                           final vocab = state.vocabulary[index];
                           final isSelected = _selectedIndex == index;
 
-                          final List<Color> cardColors = [
-                            const Color(0xFFE8EAF6), // Light blue-gray
-                            const Color(0x00eceff1),  // Light gray
-                            const Color(0x00e0f7fa), // Light teal
-                            const Color(0x00f5f5f5), // Very light gray
-                          ];
-
-                          final cardColor = cardColors[index % cardColors.length];
-
                           return GestureDetector(
                             onTap: () {
                               setState(() {
@@ -336,7 +328,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
                               duration: const Duration(milliseconds: 300),
                               margin: const EdgeInsets.only(bottom: 12),
                               decoration: BoxDecoration(
-                                color: cardColor,
+                                color: Colors.white,
                                 borderRadius: BorderRadius.circular(12),
                                 boxShadow: [
                                   BoxShadow(
@@ -356,10 +348,10 @@ class _VocabularyPageState extends State<VocabularyPage> {
                                           width: 40,
                                           height: 40,
                                           decoration: BoxDecoration(
-                                            color: Colors.white,
+                                            color: const Color(0xFFFFF9C4),
                                             shape: BoxShape.circle,
                                             border: Border.all(
-                                              color: Colors.grey[300]!,
+                                              color: const Color(0xFFFBC02D),
                                               width: 1,
                                             ),
                                           ),
@@ -368,10 +360,10 @@ class _VocabularyPageState extends State<VocabularyPage> {
                                               vocab.word.isNotEmpty
                                                   ? vocab.word.substring(0, 1).toUpperCase()
                                                   : "?",
-                                              style: TextStyle(
+                                              style: const TextStyle(
                                                 fontSize: 18,
                                                 fontWeight: FontWeight.bold,
-                                                color: Colors.grey[800],
+                                                color: Color(0xFFFBC02D),
                                               ),
                                             ),
                                           ),
@@ -386,7 +378,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
                                                 style: const TextStyle(
                                                   fontSize: 18,
                                                   fontWeight: FontWeight.bold,
-                                                  color: Color(0xFF6D4E9A),
+                                                  color: Color(0xFFFBC02D),
                                                 ),
                                               ),
                                               Text(
@@ -400,9 +392,9 @@ class _VocabularyPageState extends State<VocabularyPage> {
                                           ),
                                         ),
                                         IconButton(
-                                          icon: const Icon(Icons.volume_up),
+                                          icon: const Icon(Icons.edit_outlined),
                                           onPressed: () => _speakWord(vocab.word, vocab.synonym),
-                                          color: const Color(0xFF6D4E9A),
+                                          color: const Color(0xFFFBC02D),
                                         ),
                                       ],
                                     ),
@@ -411,9 +403,9 @@ class _VocabularyPageState extends State<VocabularyPage> {
                                     Container(
                                       width: double.infinity,
                                       padding: const EdgeInsets.all(16),
-                                      decoration: const BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.only(
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFFFF9C4).withOpacity(0.3),
+                                        borderRadius: const BorderRadius.only(
                                           bottomLeft: Radius.circular(12),
                                           bottomRight: Radius.circular(12),
                                         ),
@@ -425,7 +417,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
                                             children: [
                                               const Icon(
                                                 Icons.lightbulb_outline,
-                                                color: Color(0xFF6D4E9A),
+                                                color: Color(0xFFFBC02D),
                                               ),
                                               const SizedBox(width: 8),
                                               Expanded(
@@ -433,20 +425,20 @@ class _VocabularyPageState extends State<VocabularyPage> {
                                                   "Meaning: ${vocab.synonym}",
                                                   style: const TextStyle(
                                                     fontSize: 16,
-                                                    color: Color(0xFF6D4E9A),
+                                                    color: Color(0xFFFBC02D),
                                                   ),
                                                 ),
                                               ),
                                             ],
                                           ),
-                                          const SizedBox(height: 12),
                                           if (vocab.relatedWords.isNotEmpty) ...[
+                                            const SizedBox(height: 12),
                                             const Text(
                                               "Related Words:",
                                               style: TextStyle(
                                                 fontSize: 14,
                                                 fontWeight: FontWeight.bold,
-                                                color: Color(0xFF6D4E9A),
+                                                color: Color(0xFFFBC02D),
                                               ),
                                             ),
                                             const SizedBox(height: 8),
@@ -461,12 +453,15 @@ class _VocabularyPageState extends State<VocabularyPage> {
                                                         vertical: 4,
                                                       ),
                                                       decoration: BoxDecoration(
-                                                        color: Colors.grey[200],
+                                                        color: const Color(0xFFFFF9C4),
                                                         borderRadius: BorderRadius.circular(16),
                                                       ),
                                                       child: Text(
                                                         word,
-                                                        style: const TextStyle(fontSize: 14),
+                                                        style: const TextStyle(
+                                                          fontSize: 14,
+                                                          color: Color(0xFFFBC02D),
+                                                        ),
                                                       ),
                                                     ),
                                                   )
@@ -506,7 +501,7 @@ class _VocabularyPageState extends State<VocabularyPage> {
                               icon: const Icon(Icons.refresh),
                               label: const Text("Try Again"),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF6D4E9A),
+                                backgroundColor: const Color(0xFFFBC02D),
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(20),
@@ -525,6 +520,12 @@ class _VocabularyPageState extends State<VocabularyPage> {
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: CustomNavBar(
+        selectedIndex: 1,
+        onTap: (index) {
+          // Handle navigation
+        },
       ),
     );
   }

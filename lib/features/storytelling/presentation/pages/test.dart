@@ -169,7 +169,7 @@ class _TestPageState extends State<TestPage> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.blue[300]!, Colors.blue[600]!],
+            colors: [Colors.yellow[300]!, Colors.yellow[600]!],
           ),
         ),
         child: SafeArea(
