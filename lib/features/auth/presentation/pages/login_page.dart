@@ -19,6 +19,7 @@ class _LoginPageState extends State<LoginPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool _isPasswordVisible = false;
   // endregion
 
   // region: Lifecycle
@@ -175,10 +176,21 @@ class _LoginPageState extends State<LoginPage> {
                         CustomTextField(
                           controller: _passwordController,
                           hintText: '********',
-                          obscureText: true,
+                          obscureText: !_isPasswordVisible,
                           validator: _validatePassword,
                           style: const TextStyle(
                               color: Colors.black87, fontSize: 16),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                              color: Colors.grey[600],
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _isPasswordVisible = !_isPasswordVisible;
+                              });
+                            },
+                          ),
                           decoration: InputDecoration(
                             // Use InputDecoration directly for specific styling
                             hintStyle: TextStyle(
@@ -202,8 +214,6 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 16.0, vertical: 14.0),
-                            suffixIcon: Icon(Icons.remove_red_eye_outlined,
-                                color: Colors.grey[400]), // Eye icon
                           ),
                         ),
                         const SizedBox(height: 32),

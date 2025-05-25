@@ -99,8 +99,14 @@ class _DashboardPageState extends State<DashboardPage> {
                       CircleAvatar(
                         radius: 24,
                         backgroundColor: Colors.orange[100],
-                        child: const Icon(Icons.person,
-                            color: Colors.brown, size: 24), // User icon
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/mascot.png',
+                            width: 48,
+                            height: 48,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
                       ), // Replace with user avatar image if available
                     ],
                   ),

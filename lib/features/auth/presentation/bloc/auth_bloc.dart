@@ -70,8 +70,4 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       (_) => emit(AuthUnauthenticated()),
     );
   }
-
-
-
-
 }
