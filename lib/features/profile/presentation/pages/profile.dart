@@ -1,6 +1,7 @@
 import 'package:buddy/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:buddy/features/navbar/navbar.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -29,9 +30,30 @@ class ProfilePage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.brown),
-                        onPressed: () => Navigator.pop(context),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.arrow_back, color: Colors.brown),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                          TextButton.icon(
+                            onPressed: () {
+                              // Add logout functionality here
+                              context.read<AuthBloc>().add(LogoutRequested());
+                              Navigator.pushNamedAndRemoveUntil(
+                                context,
+                                '/login',
+                                (route) => false,
+                              );
+                            },
+                            icon: const Icon(Icons.logout, color: Colors.brown),
+                            label: const Text(
+                              "Logout",
+                              style: TextStyle(color: Colors.brown),
+                            ),
+                          ),
+                        ],
                       ),
                       Row(
                         children: [
@@ -109,27 +131,47 @@ class ProfilePage extends StatelessWidget {
                   child: ListView(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 20),
-                    children: [
-                      _BadgeImage("assets/slide1.png"),
-                      _BadgeImage("assets/slide2.png"),
-                      _BadgeImage("assets/slide3.png"),
-                      _BadgeImage("assets/home.png"),
+                    children: const [
+                      _BadgeIcon(
+                        icon: Icons.pets,
+                        backgroundColor: Color(0xFFFF4081),
+                      ),
+                      _BadgeIcon(
+                        icon: Icons.emoji_nature,
+                        backgroundColor: Color(0xFFFF9800),
+                      ),
+                      _BadgeIcon(
+                        icon: Icons.cruelty_free,
+                        backgroundColor: Color(0xFF4CAF50),
+                      ),
+                      _BadgeIcon(
+                        icon: Icons.catching_pokemon,
+                        backgroundColor: Color(0xFF9C27B0),
+                      ),
                     ],
                   ),
                 ),
-
-                const Spacer(),
-                TextButton(
-                  onPressed: () {},
-                  child: const Text(
-                    "Logout",
-                    style: TextStyle(color: Colors.red),
-                  ),
-                ),
-                const SizedBox(height: 12),
               ],
             ),
           );
+        },
+      ),
+      bottomNavigationBar: CustomNavBar(
+        selectedIndex: 4,
+        onTap: (index) {
+          if (index != 4) {
+            switch (index) {
+              case 0:
+                Navigator.pushNamed(context, '/dashboard');
+                break;
+              case 1:
+                Navigator.pushNamed(context, '/vocabulary');
+                break;
+              case 3:
+                Navigator.pushNamed(context, '/achievements');
+                break;
+            }
+          }
         },
       ),
     );
@@ -186,15 +228,37 @@ class _OverviewCard extends StatelessWidget {
   }
 }
 
-class _BadgeImage extends StatelessWidget {
-  final String path;
-  const _BadgeImage(this.path);
+class _BadgeIcon extends StatelessWidget {
+  final IconData icon;
+  final Color backgroundColor;
+
+  const _BadgeIcon({
+    required this.icon,
+    required this.backgroundColor,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 12),
-      child: Image.asset(path, height: 60),
+    return Container(
+      margin: const EdgeInsets.only(right: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: backgroundColor.withOpacity(0.3),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Icon(
+        icon,
+        color: Colors.white,
+        size: 24,
+      ),
     );
   }
 }

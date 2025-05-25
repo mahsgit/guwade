@@ -4,6 +4,7 @@ import 'package:buddy/features/science/presentation/bloc/quiz_bloc.dart';
 import 'package:buddy/features/storytelling/presentation/bloc/storytelling_bloc.dart';
 import 'package:buddy/features/storytelling/presentation/pages/story.dart';
 import 'package:buddy/features/storytelling/presentation/pages/vocabulary_page.dart';
+import 'package:buddy/features/achievements/presentation/pages/achievements_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/injection/injection_container.dart' as di;
@@ -56,6 +57,7 @@ class MyApp extends StatelessWidget {
           '/story': (context) => const StorySelectionPage(),
           '/vocabulary': (context) => const VocabularyPage(),
           '/profile': (context) => const ProfilePage(),
+          '/achievements': (context) => const AchievementsPage(),
           // '/quiz': (context) => const QuizPage(),
         },
       ),

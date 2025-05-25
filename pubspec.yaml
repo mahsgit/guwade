@@ -21,7 +21,7 @@ dependencies:
   # Network
   http: ^1.1.0
   internet_connection_checker: ^3.0.1
-  flutter_secure_storage:
+  flutter_secure_storage: ^9.0.0
   
   # Text to Speech
   flutter_tts: ^3.8.5
@@ -29,18 +29,12 @@ dependencies:
   # Navigation
   curved_navigation_bar: ^1.0.3
   # Shared Preferences
-  shared_preferences: 
-  camera: # Latest compatible version
-  # tflite_flutter: ^0.11.0  # Upgrade to resolve Dart incompatibility
+  shared_preferences: ^2.2.2
+  camera: ^0.10.5+9
   image: ^4.3.0
-  # google_ml_kit: ^0.19.0 # Updated to latest
 
-  youtube_player_flutter:
-  
-
-  universal_html: 
-  js: 
-
+  youtube_player_flutter: ^9.0.0
+  universal_html: ^2.2.4
 
 dev_dependencies:
   flutter_test:
@@ -51,7 +45,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/
-    # - assets/stories/
     - assets/main.png
     - assets/home.png
     - assets/cinderella.png
@@ -64,7 +57,7 @@ flutter:
     - assets/slide1.png
     - assets/slide2.png
     - assets/slide3.png
-    - assets/login-img.png
+    - assets/login-img.jpg
     # - assets/emotion_model.tflite
     
 

@@ -57,11 +57,7 @@ class CustomNavBar extends StatelessWidget {
             Navigator.pushNamed(context, '/vocabulary');
             break;
           case 3:
-            // Placeholder for Achievements (no route specified)
-            // Optionally show a dialog or navigate to a placeholder route
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Achievements page coming soon!')),
-            );
+            Navigator.pushNamed(context, '/achievements');
             break;
           case 4:
             Navigator.pushNamed(context, '/profile');
